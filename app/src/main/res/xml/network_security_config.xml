@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+
+    <!-- Applies to all traffic unless a more specific domain-config overrides it -->
+    <base-config cleartextTrafficPermitted="false">
+        <trust-anchors>
+            <certificates src="system" />
+        </trust-anchors>
+    </base-config>
+
+    <!--
+      TODO: once your backend domain is finalized, replace this and add a
+      <pin-set> with your server's certificate hashes for certificate pinning.
+      Example:
+      <domain-config cleartextTrafficPermitted="false">
+          <domain includeSubdomains="true">api.journii.app</domain>
+          <pin-set expiration="2027-01-01">
+              <pin digest="SHA-256">BASE64_PIN_HERE</pin>
+              <pin digest="SHA-256">BASE64_BACKUP_PIN_HERE</pin>
+          </pin-set>
+      </domain-config>
+    -->
+
+    <debug-overrides>
+        <!-- Only active in debuggable builds — lets you inspect traffic locally
+             with a proxy tool without weakening the release build at all. -->
+        <trust-anchors>
+            <certificates src="system" />
+            <certificates src="user" />
+        </trust-anchors>
+    </debug-overrides>
+
+</network-security-config>
