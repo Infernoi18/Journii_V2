@@ -1,58 +1,107 @@
 package com.example.journii_version2.ui.theme
 
 import android.app.Activity
-import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
-import androidx.compose.material3.dynamicDarkColorScheme
-import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
-private val DarkColorScheme = darkColorScheme(
-    primary = Purple80,
-    secondary = PurpleGrey80,
-    tertiary = Pink80
-)
-
-private val LightColorScheme = lightColorScheme(
-    primary = Purple40,
-    secondary = PurpleGrey40,
-    tertiary = Pink40
-
-    /* Other default colors to override
-    background = Color(0xFFFFFBFE),
-    surface = Color(0xFFFFFBFE),
+private val JourniiLightColorScheme = lightColorScheme(
+    primary = DeepOceanBlue,
     onPrimary = Color.White,
+    primaryContainer = OceanBlueContainerLight,
+    onPrimaryContainer = OnOceanBlueContainerLight,
+
+    secondary = EmeraldGreen,
     onSecondary = Color.White,
+    secondaryContainer = EmeraldContainerLight,
+    onSecondaryContainer = OnEmeraldContainerLight,
+
+    tertiary = SunsetOrange,
     onTertiary = Color.White,
-    onBackground = Color(0xFF1C1B1F),
-    onSurface = Color(0xFF1C1B1F),
-    */
+    tertiaryContainer = SunsetContainerLight,
+    onTertiaryContainer = OnSunsetContainerLight,
+
+    background = WarmOffWhite,
+    onBackground = CharcoalText,
+
+    surface = WarmOffWhite,
+    onSurface = CharcoalText,
+    surfaceVariant = SurfaceVariantLight,
+    onSurfaceVariant = OnSurfaceVariantLight,
+
+    outline = OutlineLight,
+    outlineVariant = OutlineVariantLight,
+
+    error = ErrorLight,
+    onError = OnErrorLight,
+    errorContainer = ErrorContainerLight,
+    onErrorContainer = OnErrorContainerLight
 )
 
+private val JourniiDarkColorScheme = darkColorScheme(
+    primary = OceanBlueDark,
+    onPrimary = OnOceanBlueDark,
+    primaryContainer = OceanBlueContainerDark,
+    onPrimaryContainer = OnOceanBlueContainerDark,
+
+    secondary = EmeraldDark,
+    onSecondary = OnEmeraldDark,
+    secondaryContainer = EmeraldContainerDark,
+    onSecondaryContainer = OnEmeraldContainerDark,
+
+    tertiary = SunsetDark,
+    onTertiary = OnSunsetDark,
+    tertiaryContainer = SunsetContainerDark,
+    onTertiaryContainer = OnSunsetContainerDark,
+
+    background = BackgroundDark,
+    onBackground = OnSurfaceDark,
+
+    surface = SurfaceDark,
+    onSurface = OnSurfaceDark,
+    surfaceVariant = SurfaceVariantDark,
+    onSurfaceVariant = OnSurfaceVariantDark,
+
+    outline = OutlineDark,
+    outlineVariant = OutlineVariantDark,
+
+    error = ErrorDark,
+    onError = OnErrorDark,
+    errorContainer = ErrorContainerDark,
+    onErrorContainer = OnErrorContainerDark
+)
+
+/**
+ * Journii's app-wide theme. Deliberately does NOT support Android 12+ dynamic
+ * (Material You) color — the brand palette is a first-order part of the
+ * design spec, and letting the wallpaper override it would undercut "create
+ * an original design language, don't copy existing apps."
+ */
 @Composable
-fun Journii_Version2Theme(
+fun JourniiTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
+    val colorScheme = if (darkTheme) JourniiDarkColorScheme else JourniiLightColorScheme
 
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            WindowCompat.getInsetsController(window, view).isAppearanceLightStatusBars = !darkTheme
+        }
     }
 
     MaterialTheme(
         colorScheme = colorScheme,
-        typography = Typography,
+        typography = JourniiTypography,
+        shapes = JourniiShapes,
         content = content
     )
 }

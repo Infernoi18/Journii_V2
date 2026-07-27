@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import com.example.journii_version2.navigation.JourniiNavGraph
-import com.example.journii_version2.ui.theme.Journii_Version2Theme
+import com.example.journii_version2.ui.theme.JourniiTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -18,7 +18,7 @@ class MainActivity : ComponentActivity() {
         val secureTokenStore = (application as JourniiApplication).appContainer.secureTokenStore
 
         setContent {
-            Journii_Version2Theme {
+            JourniiTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     JourniiNavGraph(secureTokenStore = secureTokenStore)
                 }
