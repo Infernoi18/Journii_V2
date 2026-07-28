@@ -18,9 +18,9 @@ data class Inspiration(
     val privacy: Privacy = Privacy.PUBLIC,
     val copiedFromInspirationId: String? = null,
     val itinerary: List<ItineraryDay> = emptyList(),
-    // True while the creator is still building this Inspiration and hasn't
-    // published it — shown only in the creator's own Profile > Drafts tab.
-    val isDraft: Boolean = false
+    val isDraft: Boolean = false,
+    val notes: String? = null,
+    val checklist: List<ChecklistItem> = emptyList()
 )
 
 data class Creator(

@@ -1,6 +1,9 @@
 package com.example.journii_version2.core.data.inspiration
 
 import com.example.journii_version2.core.model.BlockCategory
+import com.example.journii_version2.core.model.ChecklistItem
+import com.example.journii_version2.core.model.CopyMode
+import com.example.journii_version2.core.model.CopySection
 import com.example.journii_version2.core.model.Creator
 import com.example.journii_version2.core.model.Inspiration
 import com.example.journii_version2.core.model.ItineraryBlock
@@ -54,35 +57,51 @@ class FakeInspirationRepository : InspirationRepository {
         }
     }
 
-    override suspend fun copyInspiration(inspirationId: String): String {
-        val original = _feed.value.first { it.id == inspirationId }
-        val newId = "copy_${UUID.randomUUID()}"
-        val copy = original.copy(
-            id = newId,
-            creator = Creator("current_user", "You", "you.travels", null),
-            copiedFromInspirationId = inspirationId,
-            isDraft = true,
-            likeCount = 0,
-            saveCount = 0,
-            commentCount = 0,
-            isLikedByCurrentUser = false,
-            isSavedByCurrentUser = false
-        )
+    override suspend fun copyInspiration(sourceId: String, mode: CopyMode): String? {
+        val source = _feed.value.firstOrNull { it.id == sourceId } ?: return null
+        val newId = "insp_copy_${UUID.randomUUID()}"
+
+        val copy = when (mode) {
+            is CopyMode.Entire, CopyMode.ImportAndEdit -> source.copy(
+                id = newId,
+                creator = currentUserAsCreator(),
+                copiedFromInspirationId = source.id,
+                isDraft = true,
+                likeCount = 0,
+                saveCount = 0,
+                commentCount = 0,
+                isLikedByCurrentUser = false,
+                isSavedByCurrentUser = false
+            )
+            is CopyMode.Sections -> Inspiration(
+                id = newId,
+                creator = currentUserAsCreator(),
+                destination = source.destination,
+                country = source.country,
+                coverImageUrl = source.coverImageUrl,
+                imageUrls = source.imageUrls,
+                days = source.days,
+                copiedFromInspirationId = source.id,
+                isDraft = true,
+                itinerary = if (CopySection.ITINERARY in mode.sections) source.itinerary else emptyList(),
+                notes = if (CopySection.NOTES in mode.sections) source.notes else null,
+                checklist = if (CopySection.CHECKLIST in mode.sections) source.checklist else emptyList(),
+                tags = if (CopySection.TAGS in mode.sections) source.tags else emptyList()
+            )
+        }
+
         _feed.value = _feed.value + copy
         return newId
     }
 
-    override fun searchInspirations(query: String, tags: List<String>): kotlinx.coroutines.flow.Flow<List<Inspiration>> {
-        return _feed.map { list ->
-            list.filter { inspiration ->
-                val matchesQuery = query.isEmpty() || 
-                    inspiration.destination.contains(query, ignoreCase = true) ||
-                    inspiration.country.contains(query, ignoreCase = true)
-                val matchesTags = tags.isEmpty() || inspiration.tags.any { it in tags }
-                matchesQuery && matchesTags && !inspiration.isDraft
-            }
-        }
-    }
+    // Fake-data stand-in for "the signed-in user" — replace with real
+    // profile/session data once auth is backed by a real API.
+    private fun currentUserAsCreator() = Creator(
+        id = "current_user",
+        displayName = "You",
+        username = "you.travels",
+        avatarUrl = null
+    )
 
     private fun seedInspirations(): List<Inspiration> = listOf(
         Inspiration(
@@ -97,7 +116,13 @@ class FakeInspirationRepository : InspirationRepository {
             likeCount = 482,
             saveCount = 210,
             commentCount = 34,
-            itinerary = kyotoItinerary()
+            itinerary = kyotoItinerary(),
+            notes = "Bring cash — many small shops in Kyoto don't take cards.",
+            checklist = listOf(
+                ChecklistItem("c1", "Get a Japan Rail Pass"),
+                ChecklistItem("c2", "Book tea ceremony in advance"),
+                ChecklistItem("c3", "Pack comfortable walking shoes", isChecked = true)
+            )
         ),
         Inspiration(
             id = "insp_2",
@@ -126,7 +151,7 @@ class FakeInspirationRepository : InspirationRepository {
             saveCount = 190,
             commentCount = 21,
             itinerary = List(4) { ItineraryDay(dayNumber = it + 1) },
-            isDraft = true // demo data for Profile > Drafts
+            isDraft = true
         ),
         Inspiration(
             id = "insp_4",
@@ -169,7 +194,7 @@ class FakeInspirationRepository : InspirationRepository {
             saveCount = 133,
             commentCount = 18,
             itinerary = List(5) { ItineraryDay(dayNumber = it + 1) },
-            copiedFromInspirationId = "insp_2" // demo data for Profile > Copied
+            copiedFromInspirationId = "insp_2"
         )
     )
 

@@ -23,6 +23,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,22 +48,22 @@ import com.example.journii_version2.ui.theme.JourniiSpacing
 fun InspirationDetailScreen(
     repository: InspirationRepository,
     inspirationId: String,
-    onBackClick: () -> Unit
+    onBackClick: () -> Unit,
+    onCopyCompleted: (String) -> Unit
 ) {
     val viewModel: InspirationDetailViewModel = viewModel(
         factory = InspirationDetailViewModelFactory(repository, inspirationId)
     )
     val uiState by viewModel.uiState.collectAsState()
     val inspiration = uiState.inspiration
+    var showCopySheet by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
             if (inspiration != null) {
                 Button(
-                    onClick = { /* TODO: Copy Inspiration flow lands in a future batch */ },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(JourniiSpacing.md)
+                    onClick = { showCopySheet = true },
+                    modifier = Modifier.fillMaxWidth().padding(JourniiSpacing.md)
                 ) {
                     Text("Copy Inspiration")
                 }
@@ -92,6 +93,18 @@ fun InspirationDetailScreen(
                 )
             }
         }
+    }
+
+    if (showCopySheet && inspiration != null) {
+        CopyInspirationSheet(
+            sourceInspiration = inspiration,
+            repository = repository,
+            onDismiss = { showCopySheet = false },
+            onCopyCompleted = { newId ->
+                showCopySheet = false
+                onCopyCompleted(newId)
+            }
+        )
     }
 }
 
@@ -168,6 +181,15 @@ private fun InspirationDetailContent(
                     style = MaterialTheme.typography.bodyMedium
                 )
 
+                inspiration.copiedFromInspirationId?.let {
+                    Spacer(modifier = Modifier.height(JourniiSpacing.xs))
+                    Text(
+                        text = "Copied from another traveler's inspiration",
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
                 if (inspiration.tags.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(JourniiSpacing.sm))
                     Row(horizontalArrangement = Arrangement.spacedBy(JourniiSpacing.xs)) {
@@ -178,6 +200,23 @@ private fun InspirationDetailContent(
                 inspiration.shortDescription?.let {
                     Spacer(modifier = Modifier.height(JourniiSpacing.sm))
                     Text(text = it, style = MaterialTheme.typography.bodyLarge)
+                }
+
+                inspiration.notes?.let {
+                    Spacer(modifier = Modifier.height(JourniiSpacing.md))
+                    Text(text = "Personal Notes", style = MaterialTheme.typography.titleMedium)
+                    Text(text = it, style = MaterialTheme.typography.bodyMedium)
+                }
+
+                if (inspiration.checklist.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(JourniiSpacing.md))
+                    Text(text = "Checklist", style = MaterialTheme.typography.titleMedium)
+                    inspiration.checklist.forEach { checklistItem ->
+                        Text(
+                            text = if (checklistItem.isChecked) "☑ ${checklistItem.label}" else "☐ ${checklistItem.label}",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }

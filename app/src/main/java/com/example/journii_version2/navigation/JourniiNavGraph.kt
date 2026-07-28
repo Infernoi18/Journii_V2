@@ -120,7 +120,15 @@ fun JourniiNavGraph(
             InspirationDetailScreen(
                 repository = inspirationRepository,
                 inspirationId = inspirationId,
-                onBackClick = { navController.popBackStack() }
+                onBackClick = { navController.popBackStack() },
+                onCopyCompleted = { newId ->
+                    // Replaces the source's detail entry with the new copy's —
+                    // pressing back from the copy goes to Feed/Profile, not
+                    // back through the original.
+                    navController.navigate(Screen.InspirationDetail.createRoute(newId)) {
+                        popUpTo(Screen.InspirationDetail.route) { inclusive = true }
+                    }
+                }
             )
         }
     }
