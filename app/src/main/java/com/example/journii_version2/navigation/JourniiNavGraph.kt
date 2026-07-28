@@ -5,11 +5,14 @@ import androidx.compose.runtime.remember
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.journii_version2.core.data.inspiration.InspirationRepository
+import com.example.journii_version2.core.data.profile.ProfileRepository
 import com.example.journii_version2.core.security.session.SecureTokenStore
 import com.example.journii_version2.feature.auth.AuthViewModel
 import com.example.journii_version2.feature.auth.AuthViewModelFactory
@@ -18,6 +21,8 @@ import com.example.journii_version2.ui.screens.auth.EmailAuthScreen
 import com.example.journii_version2.ui.screens.auth.MobileNumberScreen
 import com.example.journii_version2.ui.screens.auth.OtpVerificationScreen
 import com.example.journii_version2.ui.screens.feed.FeedScreen
+import com.example.journii_version2.ui.screens.inspiration.InspirationDetailScreen
+import com.example.journii_version2.ui.screens.profile.ProfileScreen
 import com.example.journii_version2.ui.screens.splash.SplashScreen
 
 private const val AUTH_GRAPH_ROUTE = "auth_graph"
@@ -26,6 +31,7 @@ private const val AUTH_GRAPH_ROUTE = "auth_graph"
 fun JourniiNavGraph(
     secureTokenStore: SecureTokenStore,
     inspirationRepository: InspirationRepository,
+    profileRepository: ProfileRepository,
     navController: NavHostController = rememberNavController()
 ) {
     NavHost(
@@ -90,7 +96,31 @@ fun JourniiNavGraph(
         composable(Screen.Home.route) {
             FeedScreen(
                 repository = inspirationRepository,
-                onInspirationClick = { /* TODO: Inspiration Detail screen lands in a future batch */ }
+                onInspirationClick = { id -> navController.navigate(Screen.InspirationDetail.createRoute(id)) },
+                onProfileClick = { navController.navigate(Screen.Profile.route) }
+            )
+        }
+
+        composable(Screen.Profile.route) {
+            ProfileScreen(
+                profileRepository = profileRepository,
+                onInspirationClick = { id -> navController.navigate(Screen.InspirationDetail.createRoute(id)) }
+            )
+        }
+
+        composable(
+            route = Screen.InspirationDetail.route,
+            arguments = listOf(
+                navArgument(Screen.InspirationDetail.ARG_INSPIRATION_ID) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val inspirationId = backStackEntry.arguments
+                ?.getString(Screen.InspirationDetail.ARG_INSPIRATION_ID)
+                ?: return@composable
+            InspirationDetailScreen(
+                repository = inspirationRepository,
+                inspirationId = inspirationId,
+                onBackClick = { navController.popBackStack() }
             )
         }
     }

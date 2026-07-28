@@ -22,7 +22,8 @@ class MainActivity : ComponentActivity() {
                 Surface(modifier = Modifier.fillMaxSize()) {
                     JourniiNavGraph(
                         secureTokenStore = appContainer.secureTokenStore,
-                        inspirationRepository = appContainer.inspirationRepository
+                        inspirationRepository = appContainer.inspirationRepository,
+                        profileRepository = appContainer.profileRepository
                     )
                 }
             }

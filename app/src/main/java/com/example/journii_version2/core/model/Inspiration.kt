@@ -1,11 +1,5 @@
 package com.example.journii_version2.core.model
 
-/**
- * The core content unit of Journii — an entire travel journey, not just a
- * photo post. This models what the Discovery Feed needs to render a card.
- * Deeper fields (itinerary, budget, transportation, hotels...) get their own
- * models when the Inspiration Detail screen and Create flow are built.
- */
 data class Inspiration(
     val id: String,
     val creator: Creator,
@@ -22,9 +16,11 @@ data class Inspiration(
     val isLikedByCurrentUser: Boolean = false,
     val isSavedByCurrentUser: Boolean = false,
     val privacy: Privacy = Privacy.PUBLIC,
-    // Set when this Inspiration was created via "Copy Inspiration" — every
-    // copy remembers its original creator, per the spec.
-    val copiedFromInspirationId: String? = null
+    val copiedFromInspirationId: String? = null,
+    val itinerary: List<ItineraryDay> = emptyList(),
+    // True while the creator is still building this Inspiration and hasn't
+    // published it — shown only in the creator's own Profile > Drafts tab.
+    val isDraft: Boolean = false
 )
 
 data class Creator(

@@ -1,10 +1,16 @@
 package com.example.journii_version2.core.data.inspiration
 
+import com.example.journii_version2.core.model.BlockCategory
 import com.example.journii_version2.core.model.Creator
 import com.example.journii_version2.core.model.Inspiration
+import com.example.journii_version2.core.model.ItineraryBlock
+import com.example.journii_version2.core.model.ItineraryDay
+import com.example.journii_version2.core.model.TransportMode
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.map
+import java.util.UUID
 
 class FakeInspirationRepository : InspirationRepository {
 
@@ -12,8 +18,11 @@ class FakeInspirationRepository : InspirationRepository {
 
     override fun observeFeed() = _feed.asStateFlow()
 
+    override fun observeInspiration(inspirationId: String) =
+        _feed.map { list -> list.firstOrNull { it.id == inspirationId } }
+
     override suspend fun refreshFeed() {
-        delay(500) // stand-in for a real network refresh
+        delay(500)
         _feed.value = seedInspirations()
     }
 
@@ -45,6 +54,36 @@ class FakeInspirationRepository : InspirationRepository {
         }
     }
 
+    override suspend fun copyInspiration(inspirationId: String): String {
+        val original = _feed.value.first { it.id == inspirationId }
+        val newId = "copy_${UUID.randomUUID()}"
+        val copy = original.copy(
+            id = newId,
+            creator = Creator("current_user", "You", "you.travels", null),
+            copiedFromInspirationId = inspirationId,
+            isDraft = true,
+            likeCount = 0,
+            saveCount = 0,
+            commentCount = 0,
+            isLikedByCurrentUser = false,
+            isSavedByCurrentUser = false
+        )
+        _feed.value = _feed.value + copy
+        return newId
+    }
+
+    override fun searchInspirations(query: String, tags: List<String>): kotlinx.coroutines.flow.Flow<List<Inspiration>> {
+        return _feed.map { list ->
+            list.filter { inspiration ->
+                val matchesQuery = query.isEmpty() || 
+                    inspiration.destination.contains(query, ignoreCase = true) ||
+                    inspiration.country.contains(query, ignoreCase = true)
+                val matchesTags = tags.isEmpty() || inspiration.tags.any { it in tags }
+                matchesQuery && matchesTags && !inspiration.isDraft
+            }
+        }
+    }
+
     private fun seedInspirations(): List<Inspiration> = listOf(
         Inspiration(
             id = "insp_1",
@@ -57,7 +96,8 @@ class FakeInspirationRepository : InspirationRepository {
             tags = listOf("Solo", "Culture", "Food"),
             likeCount = 482,
             saveCount = 210,
-            commentCount = 34
+            commentCount = 34,
+            itinerary = kyotoItinerary()
         ),
         Inspiration(
             id = "insp_2",
@@ -70,7 +110,8 @@ class FakeInspirationRepository : InspirationRepository {
             tags = listOf("Adventure", "Budget", "Nature"),
             likeCount = 917,
             saveCount = 540,
-            commentCount = 88
+            commentCount = 88,
+            itinerary = icelandItinerary()
         ),
         Inspiration(
             id = "insp_3",
@@ -83,7 +124,9 @@ class FakeInspirationRepository : InspirationRepository {
             tags = listOf("Family", "Beach", "Food"),
             likeCount = 356,
             saveCount = 190,
-            commentCount = 21
+            commentCount = 21,
+            itinerary = List(4) { ItineraryDay(dayNumber = it + 1) },
+            isDraft = true // demo data for Profile > Drafts
         ),
         Inspiration(
             id = "insp_4",
@@ -96,7 +139,8 @@ class FakeInspirationRepository : InspirationRepository {
             tags = listOf("Adventure", "Backpacking"),
             likeCount = 703,
             saveCount = 402,
-            commentCount = 59
+            commentCount = 59,
+            itinerary = List(10) { ItineraryDay(dayNumber = it + 1) }
         ),
         Inspiration(
             id = "insp_5",
@@ -109,7 +153,8 @@ class FakeInspirationRepository : InspirationRepository {
             tags = listOf("Luxury", "Beach", "Nightlife"),
             likeCount = 1204,
             saveCount = 810,
-            commentCount = 143
+            commentCount = 143,
+            itinerary = List(6) { ItineraryDay(dayNumber = it + 1) }
         ),
         Inspiration(
             id = "insp_6",
@@ -122,7 +167,52 @@ class FakeInspirationRepository : InspirationRepository {
             tags = listOf("Culture", "Adventure"),
             likeCount = 289,
             saveCount = 133,
-            commentCount = 18
+            commentCount = 18,
+            itinerary = List(5) { ItineraryDay(dayNumber = it + 1) },
+            copiedFromInspirationId = "insp_2" // demo data for Profile > Copied
         )
     )
+
+    private fun kyotoItinerary(): List<ItineraryDay> {
+        val day1 = ItineraryDay(
+            dayNumber = 1,
+            blocks = listOf(
+                ItineraryBlock("k1", "Arrive at Kansai Airport", BlockCategory.TRANSIT, "9:00 AM", transportToNext = TransportMode.TRAIN),
+                ItineraryBlock("k2", "Hotel check-in", BlockCategory.ACCOMMODATION, "12:00 PM", transportToNext = TransportMode.WALKING),
+                ItineraryBlock("k3", "Walk through Gion district", BlockCategory.SIGHTSEEING, "3:00 PM", transportToNext = TransportMode.WALKING),
+                ItineraryBlock("k4", "Dinner at Pontocho Alley", BlockCategory.FOOD, "7:00 PM")
+            )
+        )
+        val day2 = ItineraryDay(
+            dayNumber = 2,
+            blocks = listOf(
+                ItineraryBlock("k5", "Fushimi Inari Shrine", BlockCategory.SIGHTSEEING, "8:00 AM", transportToNext = TransportMode.TRAIN),
+                ItineraryBlock("k6", "Arashiyama Bamboo Grove", BlockCategory.SIGHTSEEING, "11:00 AM", transportToNext = TransportMode.WALKING),
+                ItineraryBlock("k7", "Traditional tea ceremony", BlockCategory.ACTIVITY, "2:00 PM", transportToNext = TransportMode.WALKING),
+                ItineraryBlock("k8", "Ramen dinner", BlockCategory.FOOD, "7:30 PM")
+            )
+        )
+        return listOf(day1, day2) + List(3) { ItineraryDay(dayNumber = it + 3) }
+    }
+
+    private fun icelandItinerary(): List<ItineraryDay> {
+        val day1 = ItineraryDay(
+            dayNumber = 1,
+            blocks = listOf(
+                ItineraryBlock("i1", "Arrive at Keflavik Airport", BlockCategory.TRANSIT, "7:00 AM", transportToNext = TransportMode.RENTAL_CAR),
+                ItineraryBlock("i2", "Blue Lagoon", BlockCategory.ACTIVITY, "10:00 AM", transportToNext = TransportMode.RENTAL_CAR),
+                ItineraryBlock("i3", "Reykjavik hotel check-in", BlockCategory.ACCOMMODATION, "3:00 PM")
+            )
+        )
+        val day2 = ItineraryDay(
+            dayNumber = 2,
+            blocks = listOf(
+                ItineraryBlock("i4", "Þingvellir National Park", BlockCategory.SIGHTSEEING, "9:00 AM", transportToNext = TransportMode.RENTAL_CAR),
+                ItineraryBlock("i5", "Geysir hot springs", BlockCategory.SIGHTSEEING, "12:00 PM", transportToNext = TransportMode.RENTAL_CAR),
+                ItineraryBlock("i6", "Gullfoss waterfall", BlockCategory.SIGHTSEEING, "2:00 PM", transportToNext = TransportMode.RENTAL_CAR),
+                ItineraryBlock("i7", "Northern Lights watch", BlockCategory.ACTIVITY, "9:00 PM")
+            )
+        )
+        return listOf(day1, day2) + List(5) { ItineraryDay(dayNumber = it + 3) }
+    }
 }

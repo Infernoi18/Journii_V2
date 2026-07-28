@@ -10,6 +10,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.PullToRefreshBox
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -26,13 +27,19 @@ import com.example.journii_version2.ui.theme.JourniiSpacing
 @Composable
 fun FeedScreen(
     repository: InspirationRepository,
-    onInspirationClick: (String) -> Unit
+    onInspirationClick: (String) -> Unit,
+    onProfileClick: () -> Unit
 ) {
     val viewModel: FeedViewModel = viewModel(factory = FeedViewModelFactory(repository))
     val uiState by viewModel.uiState.collectAsState()
 
     Scaffold(
-        topBar = { TopAppBar(title = { Text("Discover") }) }
+        topBar = {
+            TopAppBar(
+                title = { Text("Discover") },
+                actions = { TextButton(onClick = onProfileClick) { Text("Profile") } }
+            )
+        }
     ) { innerPadding ->
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
