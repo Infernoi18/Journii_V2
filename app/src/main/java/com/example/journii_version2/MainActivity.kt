@@ -15,12 +15,15 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val secureTokenStore = (application as JourniiApplication).appContainer.secureTokenStore
+        val appContainer = (application as JourniiApplication).appContainer
 
         setContent {
             JourniiTheme {
                 Surface(modifier = Modifier.fillMaxSize()) {
-                    JourniiNavGraph(secureTokenStore = secureTokenStore)
+                    JourniiNavGraph(
+                        secureTokenStore = appContainer.secureTokenStore,
+                        inspirationRepository = appContainer.inspirationRepository
+                    )
                 }
             }
         }

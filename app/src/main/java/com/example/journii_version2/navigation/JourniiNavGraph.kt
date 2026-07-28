@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
+import com.example.journii_version2.core.data.inspiration.InspirationRepository
 import com.example.journii_version2.core.security.session.SecureTokenStore
 import com.example.journii_version2.feature.auth.AuthViewModel
 import com.example.journii_version2.feature.auth.AuthViewModelFactory
@@ -16,7 +17,7 @@ import com.example.journii_version2.ui.screens.auth.AuthLandingScreen
 import com.example.journii_version2.ui.screens.auth.EmailAuthScreen
 import com.example.journii_version2.ui.screens.auth.MobileNumberScreen
 import com.example.journii_version2.ui.screens.auth.OtpVerificationScreen
-import com.example.journii_version2.ui.screens.home.HomeScreen
+import com.example.journii_version2.ui.screens.feed.FeedScreen
 import com.example.journii_version2.ui.screens.splash.SplashScreen
 
 private const val AUTH_GRAPH_ROUTE = "auth_graph"
@@ -24,6 +25,7 @@ private const val AUTH_GRAPH_ROUTE = "auth_graph"
 @Composable
 fun JourniiNavGraph(
     secureTokenStore: SecureTokenStore,
+    inspirationRepository: InspirationRepository,
     navController: NavHostController = rememberNavController()
 ) {
     NavHost(
@@ -86,16 +88,14 @@ fun JourniiNavGraph(
         }
 
         composable(Screen.Home.route) {
-            HomeScreen()
+            FeedScreen(
+                repository = inspirationRepository,
+                onInspirationClick = { /* TODO: Inspiration Detail screen lands in a future batch */ }
+            )
         }
     }
 }
 
-/**
- * Scopes one AuthViewModel to the whole auth_graph back stack entry, so state
- * (mobile number, OTP, in-flight sign-in) survives navigating between
- * Landing -> Email/Mobile -> OTP, instead of resetting on every screen.
- */
 @Composable
 private fun sharedAuthViewModel(
     navController: NavHostController,
