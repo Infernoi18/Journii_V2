@@ -8,7 +8,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
-import androidx.navigation.navArgument
+import androidx.navigation.compose.navArgument
 import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.journii_version2.core.data.inspiration.InspirationRepository
@@ -20,9 +20,8 @@ import com.example.journii_version2.ui.screens.auth.AuthLandingScreen
 import com.example.journii_version2.ui.screens.auth.EmailAuthScreen
 import com.example.journii_version2.ui.screens.auth.MobileNumberScreen
 import com.example.journii_version2.ui.screens.auth.OtpVerificationScreen
-import com.example.journii_version2.ui.screens.feed.FeedScreen
 import com.example.journii_version2.ui.screens.inspiration.InspirationDetailScreen
-import com.example.journii_version2.ui.screens.profile.ProfileScreen
+import com.example.journii_version2.ui.screens.main.MainScreen
 import com.example.journii_version2.ui.screens.splash.SplashScreen
 
 private const val AUTH_GRAPH_ROUTE = "auth_graph"
@@ -47,7 +46,7 @@ fun JourniiNavGraph(
                     }
                 },
                 onNavigateToHome = {
-                    navController.navigate(Screen.Home.route) {
+                    navController.navigate(Screen.Main.route) {
                         popUpTo(Screen.Splash.route) { inclusive = true }
                     }
                 }
@@ -72,7 +71,7 @@ fun JourniiNavGraph(
                 val authViewModel = sharedAuthViewModel(navController, backStackEntry, secureTokenStore)
                 EmailAuthScreen(
                     viewModel = authViewModel,
-                    onAuthenticated = { navigateToHome(navController) }
+                    onAuthenticated = { navigateToMain(navController) }
                 )
             }
 
@@ -88,21 +87,14 @@ fun JourniiNavGraph(
                 val authViewModel = sharedAuthViewModel(navController, backStackEntry, secureTokenStore)
                 OtpVerificationScreen(
                     viewModel = authViewModel,
-                    onAuthenticated = { navigateToHome(navController) }
+                    onAuthenticated = { navigateToMain(navController) }
                 )
             }
         }
 
-        composable(Screen.Home.route) {
-            FeedScreen(
-                repository = inspirationRepository,
-                onInspirationClick = { id -> navController.navigate(Screen.InspirationDetail.createRoute(id)) },
-                onProfileClick = { navController.navigate(Screen.Profile.route) }
-            )
-        }
-
-        composable(Screen.Profile.route) {
-            ProfileScreen(
+        composable(Screen.Main.route) {
+            MainScreen(
+                inspirationRepository = inspirationRepository,
                 profileRepository = profileRepository,
                 onInspirationClick = { id -> navController.navigate(Screen.InspirationDetail.createRoute(id)) }
             )
@@ -122,9 +114,6 @@ fun JourniiNavGraph(
                 inspirationId = inspirationId,
                 onBackClick = { navController.popBackStack() },
                 onCopyCompleted = { newId ->
-                    // Replaces the source's detail entry with the new copy's —
-                    // pressing back from the copy goes to Feed/Profile, not
-                    // back through the original.
                     navController.navigate(Screen.InspirationDetail.createRoute(newId)) {
                         popUpTo(Screen.InspirationDetail.route) { inclusive = true }
                     }
@@ -146,8 +135,8 @@ private fun sharedAuthViewModel(
     return viewModel(viewModelStoreOwner = parentEntry, factory = AuthViewModelFactory(secureTokenStore))
 }
 
-private fun navigateToHome(navController: NavHostController) {
-    navController.navigate(Screen.Home.route) {
+private fun navigateToMain(navController: NavHostController) {
+    navController.navigate(Screen.Main.route) {
         popUpTo(AUTH_GRAPH_ROUTE) { inclusive = true }
     }
 }
