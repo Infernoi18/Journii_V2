@@ -25,6 +25,8 @@ import com.example.journii_version2.navigation.MainTab
 import com.example.journii_version2.ui.screens.feed.FeedScreen
 import com.example.journii_version2.ui.screens.profile.ProfileScreen
 import com.example.journii_version2.ui.screens.search.SearchScreen
+import com.example.journii_version2.ui.screens.wishlist.WishlistScreen
+import com.example.journii_version2.navigation.Screen
 
 /**
  * Owns its own NavHost/NavController scoped to the five bottom-nav tabs,
@@ -36,7 +38,8 @@ import com.example.journii_version2.ui.screens.search.SearchScreen
 fun MainScreen(
     inspirationRepository: InspirationRepository,
     profileRepository: ProfileRepository,
-    onInspirationClick: (String) -> Unit
+    onInspirationClick: (String) -> Unit,
+    onNavigateToWishlistDetail: (String) -> Unit
 ) {
     val tabNavController = rememberNavController()
 
@@ -64,7 +67,9 @@ fun MainScreen(
                 ComingSoonTab(label = "Create")
             }
             composable(MainTab.Wishlists.route) {
-                ComingSoonTab(label = "Wishlists")
+                WishlistScreen(
+                    onWishlistClick = onNavigateToWishlistDetail
+                )
             }
             composable(MainTab.Profile.route) {
                 ProfileScreen(
