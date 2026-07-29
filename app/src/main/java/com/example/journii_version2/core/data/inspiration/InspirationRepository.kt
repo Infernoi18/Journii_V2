@@ -10,6 +10,7 @@ interface InspirationRepository {
     suspend fun refreshFeed()
     suspend fun toggleLike(inspirationId: String)
     suspend fun toggleSave(inspirationId: String)
+    suspend fun updateInspiration(inspiration: Inspiration)
 
     /** Returns the new Inspiration's id, or null if the source no longer exists. */
     suspend fun copyInspiration(sourceId: String, mode: CopyMode): String?
