@@ -23,7 +23,8 @@ class MainActivity : ComponentActivity() {
                     JourniiNavGraph(
                         secureTokenStore = appContainer.secureTokenStore,
                         inspirationRepository = appContainer.inspirationRepository,
-                        profileRepository = appContainer.profileRepository
+                        profileRepository = appContainer.profileRepository,
+                        wishlistRepository = appContainer.wishlistRepository
                     )
                 }
             }

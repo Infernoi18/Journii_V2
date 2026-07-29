@@ -13,7 +13,14 @@ import kotlinx.coroutines.launch
 import java.util.UUID
 
 data class AuthFormState(
-    // Email sign-in
+    val isSignUp: Boolean = false,
+    // Profile info for Signup
+    val fullName: String = "",
+    val username: String = "",
+    val fullNameError: String? = null,
+    val usernameError: String? = null,
+
+    // Email sign-in/up
     val email: String = "",
     val password: String = "",
     val emailError: String? = null,
@@ -41,6 +48,31 @@ class AuthViewModel(
 
     private var cooldownJob: Job? = null
 
+    // ---- General ----
+
+    fun setSignUpMode(isSignUp: Boolean) {
+        _uiState.value = _uiState.value.copy(
+            isSignUp = isSignUp,
+            emailError = null,
+            passwordError = null,
+            fullNameError = null,
+            usernameError = null,
+            generalError = null
+        )
+    }
+
+    fun toggleAuthMode() {
+        setSignUpMode(!_uiState.value.isSignUp)
+    }
+
+    fun onFullNameChanged(value: String) {
+        _uiState.value = _uiState.value.copy(fullName = value, fullNameError = null, generalError = null)
+    }
+
+    fun onUsernameChanged(value: String) {
+        _uiState.value = _uiState.value.copy(username = value, usernameError = null, generalError = null)
+    }
+
     // ---- Email ----
 
     fun onEmailChanged(value: String) {
@@ -55,9 +87,22 @@ class AuthViewModel(
         val current = _uiState.value
         val emailError = validateEmail(current.email)
         val passwordError = validatePassword(current.password)
+        
+        var fullNameError: String? = null
+        var usernameError: String? = null
+        
+        if (current.isSignUp) {
+            fullNameError = validateFullName(current.fullName)
+            usernameError = validateUsername(current.username)
+        }
 
-        if (emailError != null || passwordError != null) {
-            _uiState.value = current.copy(emailError = emailError, passwordError = passwordError)
+        if (emailError != null || passwordError != null || fullNameError != null || usernameError != null) {
+            _uiState.value = current.copy(
+                emailError = emailError, 
+                passwordError = passwordError,
+                fullNameError = fullNameError,
+                usernameError = usernameError
+            )
             return
         }
 
@@ -65,8 +110,8 @@ class AuthViewModel(
 
         viewModelScope.launch {
             try {
-                // No backend yet — the password is never stored, only the
-                // session token a real API response would hand back.
+                // Mocking registration/login
+                delay(1000)
                 completeAuthentication(mockToken())
             } catch (e: CancellationException) {
                 throw e
@@ -189,6 +234,19 @@ class AuthViewModel(
 
     private fun mockToken(): String = UUID.randomUUID().toString()
 
+    private fun validateFullName(name: String): String? = when {
+        name.isBlank() -> "Name is required"
+        name.length < 2 -> "Name is too short"
+        else -> null
+    }
+
+    private fun validateUsername(username: String): String? = when {
+        username.isBlank() -> "Username is required"
+        username.length < 3 -> "Username must be at least 3 characters"
+        !USERNAME_REGEX.matches(username) -> "Username can only contain letters, numbers, underscores and dots"
+        else -> null
+    }
+
     private fun validateEmail(email: String): String? {
         val trimmed = email.trim()
         return when {
@@ -217,5 +275,6 @@ class AuthViewModel(
     companion object {
         private val EMAIL_REGEX = Regex("^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$")
         private val MOBILE_REGEX = Regex("^\\+[1-9]\\d{7,14}$")
+        private val USERNAME_REGEX = Regex("^[a-zA-Z0-9._]+$")
     }
 }

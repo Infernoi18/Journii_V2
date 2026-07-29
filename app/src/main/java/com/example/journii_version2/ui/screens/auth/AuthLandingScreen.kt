@@ -27,7 +27,8 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun AuthLandingScreen(
-    onContinueWithEmail: () -> Unit,
+    onSignUpWithEmail: () -> Unit,
+    onLoginWithEmail: () -> Unit,
     onContinueWithMobile: () -> Unit,
     onGoogleIdToken: (String) -> Unit,
     onGoogleSignInError: (String) -> Unit
@@ -47,8 +48,14 @@ fun AuthLandingScreen(
         Text(text = "Plan journeys worth remembering.", style = MaterialTheme.typography.bodyLarge)
         Spacer(modifier = Modifier.height(32.dp))
 
-        Button(onClick = onContinueWithEmail, modifier = Modifier.fillMaxWidth()) {
-            Text("Continue with Email")
+        Button(onClick = onSignUpWithEmail, modifier = Modifier.fillMaxWidth()) {
+            Text("Sign Up with Email")
+        }
+
+        Spacer(modifier = Modifier.height(12.dp))
+
+        OutlinedButton(onClick = onLoginWithEmail, modifier = Modifier.fillMaxWidth()) {
+            Text("Log In with Email")
         }
 
         Spacer(modifier = Modifier.height(12.dp))

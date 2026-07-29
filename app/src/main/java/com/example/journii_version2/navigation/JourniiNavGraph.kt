@@ -13,6 +13,7 @@ import androidx.navigation.compose.navigation
 import androidx.navigation.compose.rememberNavController
 import com.example.journii_version2.core.data.inspiration.InspirationRepository
 import com.example.journii_version2.core.data.profile.ProfileRepository
+import com.example.journii_version2.core.data.wishlist.WishlistRepository
 import com.example.journii_version2.core.security.session.SecureTokenStore
 import com.example.journii_version2.feature.auth.AuthViewModel
 import com.example.journii_version2.feature.auth.AuthViewModelFactory
@@ -32,6 +33,7 @@ fun JourniiNavGraph(
     secureTokenStore: SecureTokenStore,
     inspirationRepository: InspirationRepository,
     profileRepository: ProfileRepository,
+    wishlistRepository: WishlistRepository,
     navController: NavHostController = rememberNavController()
 ) {
     NavHost(
@@ -61,7 +63,14 @@ fun JourniiNavGraph(
             composable(Screen.AuthLanding.route) { backStackEntry ->
                 val authViewModel = sharedAuthViewModel(navController, backStackEntry, secureTokenStore)
                 AuthLandingScreen(
-                    onContinueWithEmail = { navController.navigate(Screen.EmailAuth.route) },
+                    onSignUpWithEmail = {
+                        authViewModel.setSignUpMode(true)
+                        navController.navigate(Screen.EmailAuth.route)
+                    },
+                    onLoginWithEmail = {
+                        authViewModel.setSignUpMode(false)
+                        navController.navigate(Screen.EmailAuth.route)
+                    },
                     onContinueWithMobile = { navController.navigate(Screen.MobileNumber.route) },
                     onGoogleIdToken = { idToken -> authViewModel.completeGoogleSignIn(idToken) },
                     onGoogleSignInError = { message -> authViewModel.onGoogleSignInError(message) }
@@ -97,8 +106,9 @@ fun JourniiNavGraph(
             MainScreen(
                 inspirationRepository = inspirationRepository,
                 profileRepository = profileRepository,
+                wishlistRepository = wishlistRepository,
                 onInspirationClick = { id -> navController.navigate(Screen.InspirationDetail.createRoute(id)) },
-                onNavigateToWishlistDetail = { id -> navController.navigate(Screen.WishlistDetail.createRoute(id)) }
+                onWishlistClick = { id -> navController.navigate(Screen.WishlistDetail.createRoute(id)) }
             )
         }
 

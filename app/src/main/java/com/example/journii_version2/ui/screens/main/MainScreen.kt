@@ -1,16 +1,12 @@
 package com.example.journii_version2.ui.screens.main
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavDestination.Companion.hierarchy
 import androidx.navigation.NavGraph.Companion.findStartDestination
@@ -21,25 +17,21 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.journii_version2.core.data.inspiration.InspirationRepository
 import com.example.journii_version2.core.data.profile.ProfileRepository
+import com.example.journii_version2.core.data.wishlist.WishlistRepository
 import com.example.journii_version2.navigation.MainTab
+import com.example.journii_version2.ui.screens.create.CreateBasicInfoScreen
 import com.example.journii_version2.ui.screens.feed.FeedScreen
 import com.example.journii_version2.ui.screens.profile.ProfileScreen
 import com.example.journii_version2.ui.screens.search.SearchScreen
 import com.example.journii_version2.ui.screens.wishlist.WishlistScreen
-import com.example.journii_version2.navigation.Screen
 
-/**
- * Owns its own NavHost/NavController scoped to the five bottom-nav tabs,
- * separate from the outer JourniiNavGraph. Full-screen destinations like
- * Inspiration Detail live in the outer graph (via onInspirationClick), so
- * they push over this shell without the bottom bar following them.
- */
 @Composable
 fun MainScreen(
     inspirationRepository: InspirationRepository,
     profileRepository: ProfileRepository,
+    wishlistRepository: WishlistRepository,
     onInspirationClick: (String) -> Unit,
-    onNavigateToWishlistDetail: (String) -> Unit
+    onWishlistClick: (String) -> Unit
 ) {
     val tabNavController = rememberNavController()
 
@@ -64,11 +56,14 @@ fun MainScreen(
                 )
             }
             composable(MainTab.Create.route) {
-                ComingSoonTab(label = "Create")
+                CreateBasicInfoScreen(
+                    repository = inspirationRepository,
+                    onDraftCreated = onInspirationClick
+                )
             }
             composable(MainTab.Wishlists.route) {
                 WishlistScreen(
-                    onWishlistClick = onNavigateToWishlistDetail
+                    onWishlistClick = onWishlistClick
                 )
             }
             composable(MainTab.Profile.route) {
@@ -111,19 +106,9 @@ private fun TabIcon(tab: MainTab) {
     Text(text = glyph)
 }
 
-@Composable
-private fun ComingSoonTab(label: String) {
-    Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-        Text(text = "$label is coming in a future batch", style = MaterialTheme.typography.bodyLarge)
-    }
-}
-
-/** Standard single-top, state-preserving tab navigation. */
 private fun NavHostController.navigateToTab(tab: MainTab) {
     navigate(tab.route) {
-        popUpTo(graph.findStartDestination().id) {
-            saveState = true
-        }
+        popUpTo(graph.findStartDestination().id) { saveState = true }
         launchSingleTop = true
         restoreState = true
     }

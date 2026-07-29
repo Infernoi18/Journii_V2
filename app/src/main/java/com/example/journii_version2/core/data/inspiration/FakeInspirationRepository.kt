@@ -98,6 +98,28 @@ class FakeInspirationRepository : InspirationRepository {
         return newId
     }
 
+    override suspend fun createDraft(
+        destination: String,
+        country: String,
+        days: Int,
+        coverImageUrl: String,
+        shortDescription: String?
+    ): String {
+        val newId = "insp_draft_${UUID.randomUUID()}"
+        val draft = Inspiration(
+            id = newId,
+            creator = currentUserAsCreator(),
+            destination = destination,
+            country = country,
+            coverImageUrl = coverImageUrl,
+            days = days,
+            shortDescription = shortDescription,
+            isDraft = true
+        )
+        _feed.value = _feed.value + draft
+        return newId
+    }
+
     // Fake-data stand-in for "the signed-in user" — replace with real
     // profile/session data once auth is backed by a real API.
     private fun currentUserAsCreator() = Creator(

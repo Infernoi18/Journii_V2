@@ -14,4 +14,13 @@ interface InspirationRepository {
 
     /** Returns the new Inspiration's id, or null if the source no longer exists. */
     suspend fun copyInspiration(sourceId: String, mode: CopyMode): String?
+
+    /** Creates a new draft Inspiration with just the mandatory fields filled in. Returns its id. */
+    suspend fun createDraft(
+        destination: String,
+        country: String,
+        days: Int,
+        coverImageUrl: String,
+        shortDescription: String?
+    ): String
 }

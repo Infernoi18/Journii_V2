@@ -46,8 +46,38 @@ fun EmailAuthScreen(
             .padding(24.dp),
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Sign in with email", style = MaterialTheme.typography.headlineSmall)
+        Text(
+            text = if (uiState.isSignUp) "Create an account" else "Sign in with email",
+            style = MaterialTheme.typography.headlineSmall
+        )
         Spacer(modifier = Modifier.height(24.dp))
+
+        if (uiState.isSignUp) {
+            OutlinedTextField(
+                value = uiState.fullName,
+                onValueChange = viewModel::onFullNameChanged,
+                label = { Text("Full Name") },
+                singleLine = true,
+                isError = uiState.fullNameError != null,
+                supportingText = { uiState.fullNameError?.let { Text(it) } },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            OutlinedTextField(
+                value = uiState.username,
+                onValueChange = viewModel::onUsernameChanged,
+                label = { Text("Username") },
+                placeholder = { Text("unique_handle") },
+                singleLine = true,
+                isError = uiState.usernameError != null,
+                supportingText = { uiState.usernameError?.let { Text(it) } },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+        }
 
         OutlinedTextField(
             value = uiState.email,
@@ -94,8 +124,20 @@ fun EmailAuthScreen(
             if (uiState.isSubmitting) {
                 CircularProgressIndicator(modifier = Modifier.height(20.dp), strokeWidth = 2.dp)
             } else {
-                Text("Continue")
+                Text(if (uiState.isSignUp) "Sign Up" else "Continue")
             }
+        }
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(
+            onClick = viewModel::toggleAuthMode,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Text(
+                if (uiState.isSignUp) "Already have an account? Sign In"
+                else "Don't have an account? Sign Up"
+            )
         }
     }
 }
