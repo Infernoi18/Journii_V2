@@ -66,7 +66,8 @@ fun TransportConnectorRow(
     }
 }
 
-private fun BlockCategory.displayName(): String = when (this) {
+/** Internal (not private) so Create's Itinerary Builder can reuse these labels too. */
+internal fun BlockCategory.displayName(): String = when (this) {
     BlockCategory.TRANSIT -> "Transit"
     BlockCategory.FOOD -> "Food"
     BlockCategory.SIGHTSEEING -> "Sightseeing"
@@ -76,7 +77,7 @@ private fun BlockCategory.displayName(): String = when (this) {
     BlockCategory.OTHER -> "Other"
 }
 
-private fun TransportMode.displayName(): String = when (this) {
+internal fun TransportMode.displayName(): String = when (this) {
     TransportMode.WALKING -> "Walking"
     TransportMode.METRO -> "Metro"
     TransportMode.TAXI -> "Taxi"

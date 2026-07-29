@@ -10,15 +10,19 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -52,6 +56,7 @@ fun InspirationDetailScreen(
     profileRepository: com.example.journii_version2.core.data.profile.ProfileRepository,
     inspirationId: String,
     onBackClick: () -> Unit,
+    onEditItineraryClick: (String) -> Unit,
     onCopyCompleted: (String) -> Unit
 ) {
     // In a real app, this would be injected via Hilt or provided by a higher-level container
@@ -70,11 +75,20 @@ fun InspirationDetailScreen(
     Scaffold(
         bottomBar = {
             if (inspiration != null) {
-                Button(
-                    onClick = { showCopySheet = true },
-                    modifier = Modifier.fillMaxWidth().padding(JourniiSpacing.md)
-                ) {
-                    Text("Copy Inspiration")
+                if (uiState.isOwner && inspiration.isDraft) {
+                    Button(
+                        onClick = { onEditItineraryClick(inspiration.id) },
+                        modifier = Modifier.fillMaxWidth().padding(JourniiSpacing.md)
+                    ) {
+                        Text("Edit Itinerary")
+                    }
+                } else {
+                    Button(
+                        onClick = { showCopySheet = true },
+                        modifier = Modifier.fillMaxWidth().padding(JourniiSpacing.md)
+                    ) {
+                        Text("Copy Inspiration")
+                    }
                 }
             }
         }
@@ -102,6 +116,8 @@ fun InspirationDetailScreen(
                     onDeleteClick = {
                         viewModel.deleteInspiration(onDeleted = onBackClick)
                     },
+                    comments = uiState.comments,
+                    onAddComment = viewModel::addComment,
                     modifier = Modifier.padding(innerPadding)
                 )
             }
@@ -154,9 +170,12 @@ private fun InspirationDetailContent(
     onLikeClick: () -> Unit,
     onSaveClick: () -> Unit,
     onDeleteClick: () -> Unit,
+    comments: List<com.example.journii_version2.core.model.Comment>,
+    onAddComment: (String) -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedDayIndex by remember { mutableIntStateOf(0) }
+    var commentText by remember { mutableStateOf("") }
     val days = inspiration.itinerary
 
     LazyColumn(modifier = modifier.fillMaxSize()) {
@@ -308,6 +327,71 @@ private fun InspirationDetailContent(
                         Column(modifier = Modifier.padding(horizontal = JourniiSpacing.md)) {
                             ItineraryBlockRow(block = block)
                             block.transportToNext?.let { mode -> TransportConnectorRow(transportMode = mode) }
+                        }
+                    }
+                }
+            }
+        }
+
+        item {
+            Column(modifier = Modifier.padding(JourniiSpacing.md)) {
+                Text(text = "Comments (${inspiration.commentCount})", style = MaterialTheme.typography.titleMedium)
+                Spacer(modifier = Modifier.height(JourniiSpacing.sm))
+
+                TextField(
+                    value = commentText,
+                    onValueChange = { commentText = it },
+                    placeholder = { Text("Add a comment...") },
+                    modifier = Modifier.fillMaxWidth(),
+                    trailingIcon = {
+                        TextButton(
+                            onClick = {
+                                if (commentText.isNotBlank()) {
+                                    onAddComment(commentText)
+                                    commentText = ""
+                                }
+                            },
+                            enabled = commentText.isNotBlank()
+                        ) {
+                            Text("Post")
+                        }
+                    },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent
+                    )
+                )
+
+                Spacer(modifier = Modifier.height(JourniiSpacing.md))
+
+                if (comments.isEmpty()) {
+                    Text(
+                        text = "No comments yet. Be the first to say something!",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                } else {
+                    comments.forEach { comment ->
+                        Column(modifier = Modifier.padding(vertical = JourniiSpacing.xs)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Text(
+                                    text = comment.creator.displayName,
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(JourniiSpacing.xs))
+                                Text(
+                                    text = "@${comment.creator.username}",
+                                    style = MaterialTheme.typography.labelSmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            Text(text = comment.text, style = MaterialTheme.typography.bodyMedium)
+                            HorizontalDivider(
+                                modifier = Modifier.padding(top = JourniiSpacing.xs),
+                                thickness = 0.5.dp,
+                                color = MaterialTheme.colorScheme.outlineVariant
+                            )
                         }
                     }
                 }

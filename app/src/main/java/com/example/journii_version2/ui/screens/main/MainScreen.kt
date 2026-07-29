@@ -58,7 +58,12 @@ fun MainScreen(
             composable(MainTab.Create.route) {
                 CreateBasicInfoScreen(
                     repository = inspirationRepository,
-                    onDraftCreated = onInspirationClick
+                    onDraftCreated = { id ->
+                        onInspirationClick(id)
+                        tabNavController.navigate(MainTab.Home.route) {
+                            popUpTo(MainTab.Create.route) { inclusive = true }
+                        }
+                    }
                 )
             }
             composable(MainTab.Wishlists.route) {

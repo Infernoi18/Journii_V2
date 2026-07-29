@@ -1,7 +1,9 @@
 package com.example.journii_version2.core.data.inspiration
 
 import com.example.journii_version2.core.model.CopyMode
+import com.example.journii_version2.core.model.ChecklistItem
 import com.example.journii_version2.core.model.Inspiration
+import com.example.journii_version2.core.model.ItineraryDay
 import kotlinx.coroutines.flow.Flow
 
 interface InspirationRepository {
@@ -25,4 +27,19 @@ interface InspirationRepository {
     ): String
 
     suspend fun deleteInspiration(inspirationId: String)
+
+    /** Replaces the full itinerary for a draft — called by the Itinerary Builder on every edit. */
+    suspend fun updateItinerary(inspirationId: String, itinerary: List<ItineraryDay>)
+
+    suspend fun updateOptionalSections(
+        inspirationId: String,
+        notes: String?,
+        checklist: List<ChecklistItem>,
+        tags: List<String>
+    )
+
+    suspend fun publishInspiration(inspirationId: String)
+
+    fun observeComments(inspirationId: String): Flow<List<com.example.journii_version2.core.model.Comment>>
+    suspend fun addComment(inspirationId: String, text: String)
 }

@@ -1,5 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
-<resources>
+<resources xmlns:tools="http://schemas.android.com/tools">
 
-    <style name="Theme.Journii_Version2" parent="android:Theme.Material.Light.NoActionBar" />
+    <!-- Base application theme. Compose's own MaterialTheme (see ui/theme/Theme.kt)
+         owns the real Material3 styling — this XML theme only needs to satisfy
+         the platform before Compose renders anything. -->
+    <style name="Theme.Journii" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <!-- Shown instantly at process start, before any Activity or Compose
+         content exists. postSplashScreenTheme swaps back to Theme.Journii
+         right after MainActivity installs the splash screen. -->
+    <style name="Theme.Journii.Splash" parent="Theme.SplashScreen">
+        <item name="windowSplashScreenBackground">@color/journii_splash_background</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_splash_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.Journii</item>
+    </style>
+
 </resources>

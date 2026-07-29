@@ -7,4 +7,9 @@
     <color name="teal_700">#FF018786</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
+    <color name="journii_deep_ocean_blue">#FF0B4F6C</color>
+    <color name="journii_emerald_green">#FF1E8A5C</color>
+    <color name="journii_sunset_orange">#FFE8734A</color>
+    <color name="journii_warm_off_white">#FFFBF7F2</color>
+    <color name="journii_splash_background">#FF0B4F6C</color>
 </resources>

@@ -11,6 +11,14 @@ sealed class Screen(val route: String) {
         const val ARG_INSPIRATION_ID = "inspirationId"
         fun createRoute(inspirationId: String) = "inspiration_detail/$inspirationId"
     }
+    data object ItineraryBuilder : Screen("itinerary_builder/{inspirationId}") {
+        const val ARG_INSPIRATION_ID = "inspirationId"
+        fun createRoute(inspirationId: String) = "itinerary_builder/$inspirationId"
+    }
+    data object OptionalSections : Screen("optional_sections/{inspirationId}") {
+        const val ARG_INSPIRATION_ID = "inspirationId"
+        fun createRoute(inspirationId: String) = "optional_sections/$inspirationId"
+    }
     data object WishlistDetail : Screen("wishlist_detail/{wishlistId}") {
         const val ARG_WISHLIST_ID = "wishlistId"
         fun createRoute(wishlistId: String) = "wishlist_detail/$wishlistId"

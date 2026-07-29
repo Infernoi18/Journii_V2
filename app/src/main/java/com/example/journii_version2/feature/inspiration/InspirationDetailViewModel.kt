@@ -5,6 +5,7 @@ import androidx.lifecycle.viewModelScope
 import com.example.journii_version2.core.data.inspiration.InspirationRepository
 import com.example.journii_version2.core.data.wishlist.WishlistRepository
 import com.example.journii_version2.core.data.profile.ProfileRepository
+import com.example.journii_version2.core.model.Comment
 import com.example.journii_version2.core.model.Inspiration
 import com.example.journii_version2.core.model.Wishlist
 import kotlinx.coroutines.flow.*
@@ -14,7 +15,8 @@ data class InspirationDetailUiState(
     val inspiration: Inspiration? = null,
     val isLoading: Boolean = true,
     val isOwner: Boolean = false,
-    val wishlists: List<Wishlist> = emptyList()
+    val wishlists: List<Wishlist> = emptyList(),
+    val comments: List<Comment> = emptyList()
 )
 
 class InspirationDetailViewModel(
@@ -26,14 +28,16 @@ class InspirationDetailViewModel(
 
     val uiState: StateFlow<InspirationDetailUiState> = combine(
         repository.observeInspiration(inspirationId),
+        repository.observeComments(inspirationId),
         wishlistRepository.getWishlists(),
         profileRepository.observeCurrentUserProfile()
-    ) { found, wishlists, profile ->
+    ) { found, comments, wishlists, profile ->
         InspirationDetailUiState(
             inspiration = found,
             isLoading = false,
             isOwner = found?.creator?.id == profile.id,
-            wishlists = wishlists
+            wishlists = wishlists,
+            comments = comments
         )
     }.stateIn(
         scope = viewModelScope,
@@ -71,6 +75,13 @@ class InspirationDetailViewModel(
         viewModelScope.launch {
             repository.deleteInspiration(id)
             onDeleted()
+        }
+    }
+
+    fun addComment(text: String) {
+        if (text.isBlank()) return
+        viewModelScope.launch {
+            repository.addComment(inspirationId, text)
         }
     }
 }

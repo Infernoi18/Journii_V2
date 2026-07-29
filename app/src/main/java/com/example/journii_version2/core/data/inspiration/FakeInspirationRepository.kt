@@ -2,6 +2,7 @@ package com.example.journii_version2.core.data.inspiration
 
 import com.example.journii_version2.core.model.BlockCategory
 import com.example.journii_version2.core.model.ChecklistItem
+import com.example.journii_version2.core.model.Comment
 import com.example.journii_version2.core.model.CopyMode
 import com.example.journii_version2.core.model.CopySection
 import com.example.journii_version2.core.model.Creator
@@ -9,6 +10,7 @@ import com.example.journii_version2.core.model.Inspiration
 import com.example.journii_version2.core.model.ItineraryBlock
 import com.example.journii_version2.core.model.ItineraryDay
 import com.example.journii_version2.core.model.TransportMode
+import com.example.journii_version2.core.session.CurrentUser
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -18,6 +20,7 @@ import java.util.UUID
 class FakeInspirationRepository : InspirationRepository {
 
     private val _feed = MutableStateFlow(seedInspirations())
+    private val _comments = MutableStateFlow<Map<String, List<Comment>>>(seedComments())
 
     override fun observeFeed() = _feed.asStateFlow()
 
@@ -114,7 +117,8 @@ class FakeInspirationRepository : InspirationRepository {
             coverImageUrl = coverImageUrl,
             days = days,
             shortDescription = shortDescription,
-            isDraft = true
+            isDraft = true,
+            itinerary = List(days) { ItineraryDay(dayNumber = it + 1) }
         )
         _feed.value = _feed.value + draft
         return newId
@@ -124,12 +128,60 @@ class FakeInspirationRepository : InspirationRepository {
         _feed.value = _feed.value.filterNot { it.id == inspirationId }
     }
 
-    // Fake-data stand-in for "the signed-in user" — replace with real
-    // profile/session data once auth is backed by a real API.
+    override suspend fun updateItinerary(inspirationId: String, itinerary: List<ItineraryDay>) {
+        _feed.value = _feed.value.map { inspiration ->
+            if (inspiration.id == inspirationId) inspiration.copy(itinerary = itinerary) else inspiration
+        }
+    }
+
+    override suspend fun updateOptionalSections(
+        inspirationId: String,
+        notes: String?,
+        checklist: List<ChecklistItem>,
+        tags: List<String>
+    ) {
+        _feed.value = _feed.value.map { inspiration ->
+            if (inspiration.id == inspirationId) {
+                inspiration.copy(notes = notes, checklist = checklist, tags = tags)
+            } else {
+                inspiration
+            }
+        }
+    }
+
+    override suspend fun publishInspiration(inspirationId: String) {
+        _feed.value = _feed.value.map { inspiration ->
+            if (inspiration.id == inspirationId) {
+                inspiration.copy(isDraft = false)
+            } else {
+                inspiration
+            }
+        }
+    }
+
+    override fun observeComments(inspirationId: String): kotlinx.coroutines.flow.Flow<List<Comment>> =
+        _comments.map { it[inspirationId] ?: emptyList() }
+
+    override suspend fun addComment(inspirationId: String, text: String) {
+        val newComment = Comment(
+            id = "comment_${UUID.randomUUID()}",
+            inspirationId = inspirationId,
+            creator = currentUserAsCreator(),
+            text = text
+        )
+        val currentComments = _comments.value[inspirationId] ?: emptyList()
+        _comments.value = _comments.value + (inspirationId to (currentComments + newComment))
+
+        // Update comment count
+        _feed.value = _feed.value.map {
+            if (it.id == inspirationId) it.copy(commentCount = it.commentCount + 1) else it
+        }
+    }
+
     private fun currentUserAsCreator() = Creator(
-        id = "current_user",
-        displayName = "You",
-        username = "you.travels",
+        id = CurrentUser.ID,
+        displayName = CurrentUser.DISPLAY_NAME,
+        username = CurrentUser.USERNAME,
         avatarUrl = null
     )
 
@@ -270,4 +322,29 @@ class FakeInspirationRepository : InspirationRepository {
         )
         return listOf(day1, day2) + List(5) { ItineraryDay(dayNumber = it + 3) }
     }
+
+    private fun seedComments(): Map<String, List<Comment>> = mapOf(
+        "insp_1" to listOf(
+            Comment(
+                id = "c1",
+                inspirationId = "insp_1",
+                creator = Creator("u4", "Diego Ramirez", "diegoexplores", null),
+                text = "Kyoto is magical! Don't miss the Fushimi Inari at sunrise."
+            ),
+            Comment(
+                id = "c2",
+                inspirationId = "insp_1",
+                creator = Creator("u5", "Sara Kim", "sararoams", null),
+                text = "The matcha there is on another level. Great itinerary!"
+            )
+        ),
+        "insp_2" to listOf(
+            Comment(
+                id = "c3",
+                inspirationId = "insp_2",
+                creator = Creator("u1", "Maya Chen", "mayawanders", null),
+                text = "Did you see the Northern Lights? It's been on my bucket list forever."
+            )
+        )
+    )
 }

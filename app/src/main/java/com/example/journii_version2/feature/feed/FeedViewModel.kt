@@ -8,12 +8,14 @@ import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 
 data class FeedUiState(
     val inspirations: List<Inspiration> = emptyList(),
+    val selectedTag: String? = null,
     val isRefreshing: Boolean = false,
     val errorMessage: String? = null
 )
@@ -24,13 +26,25 @@ class FeedViewModel(
 
     private val isRefreshing = MutableStateFlow(false)
     private val errorMessage = MutableStateFlow<String?>(null)
+    private val selectedTag = MutableStateFlow<String?>(null)
 
     val uiState: StateFlow<FeedUiState> = combine(
         repository.observeFeed(),
         isRefreshing,
-        errorMessage
-    ) { inspirations, refreshing, error ->
-        FeedUiState(inspirations = inspirations, isRefreshing = refreshing, errorMessage = error)
+        errorMessage,
+        selectedTag
+    ) { inspirations, refreshing, error, tag ->
+        val filtered = if (tag == null) {
+            inspirations.filter { !it.isDraft }
+        } else {
+            inspirations.filter { !it.isDraft && tag in it.tags }
+        }
+        FeedUiState(
+            inspirations = filtered,
+            selectedTag = tag,
+            isRefreshing = refreshing,
+            errorMessage = error
+        )
     }.stateIn(
         scope = viewModelScope,
         started = SharingStarted.WhileSubscribed(5_000),
@@ -59,5 +73,9 @@ class FeedViewModel(
 
     fun toggleSave(inspirationId: String) {
         viewModelScope.launch { repository.toggleSave(inspirationId) }
+    }
+
+    fun selectTag(tag: String?) {
+        selectedTag.value = tag
     }
 }

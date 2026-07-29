@@ -21,6 +21,8 @@ import com.example.journii_version2.ui.screens.auth.AuthLandingScreen
 import com.example.journii_version2.ui.screens.auth.EmailAuthScreen
 import com.example.journii_version2.ui.screens.auth.MobileNumberScreen
 import com.example.journii_version2.ui.screens.auth.OtpVerificationScreen
+import com.example.journii_version2.ui.screens.create.ItineraryBuilderScreen
+import com.example.journii_version2.ui.screens.create.OptionalSectionsScreen
 import com.example.journii_version2.ui.screens.inspiration.InspirationDetailScreen
 import com.example.journii_version2.ui.screens.main.MainScreen
 import com.example.journii_version2.ui.screens.splash.SplashScreen
@@ -126,9 +128,48 @@ fun JourniiNavGraph(
                 profileRepository = profileRepository,
                 inspirationId = inspirationId,
                 onBackClick = { navController.popBackStack() },
+                onEditItineraryClick = { id -> navController.navigate(Screen.ItineraryBuilder.createRoute(id)) },
                 onCopyCompleted = { newId ->
                     navController.navigate(Screen.InspirationDetail.createRoute(newId)) {
                         popUpTo(Screen.InspirationDetail.route) { inclusive = true }
+                    }
+                }
+            )
+        }
+
+        composable(
+            route = Screen.ItineraryBuilder.route,
+            arguments = listOf(
+                navArgument(Screen.ItineraryBuilder.ARG_INSPIRATION_ID) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val inspirationId = backStackEntry.arguments
+                ?.getString(Screen.ItineraryBuilder.ARG_INSPIRATION_ID)
+                ?: return@composable
+            ItineraryBuilderScreen(
+                repository = inspirationRepository,
+                inspirationId = inspirationId,
+                onBackClick = { navController.popBackStack() },
+                onContinueClick = { id -> navController.navigate(Screen.OptionalSections.createRoute(id)) }
+            )
+        }
+
+        composable(
+            route = Screen.OptionalSections.route,
+            arguments = listOf(
+                navArgument(Screen.OptionalSections.ARG_INSPIRATION_ID) { type = NavType.StringType }
+            )
+        ) { backStackEntry ->
+            val inspirationId = backStackEntry.arguments
+                ?.getString(Screen.OptionalSections.ARG_INSPIRATION_ID)
+                ?: return@composable
+            OptionalSectionsScreen(
+                repository = inspirationRepository,
+                inspirationId = inspirationId,
+                onBackClick = { navController.popBackStack() },
+                onPublished = {
+                    navController.navigate(Screen.InspirationDetail.createRoute(inspirationId)) {
+                        popUpTo(Screen.Main.route)
                     }
                 }
             )

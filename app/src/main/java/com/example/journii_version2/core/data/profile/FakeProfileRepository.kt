@@ -4,17 +4,13 @@ import com.example.journii_version2.core.data.inspiration.InspirationRepository
 import com.example.journii_version2.core.model.Inspiration
 import com.example.journii_version2.core.model.Privacy
 import com.example.journii_version2.core.model.UserProfile
+import com.example.journii_version2.core.session.CurrentUser
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 
-/**
- * Depends on InspirationRepository rather than keeping its own copy of
- * Inspiration data — Pinned/Copied/Draft are filtered views over the same
- * single source of truth, not a separate store to keep in sync.
- */
 class FakeProfileRepository(
     private val inspirationRepository: InspirationRepository
 ) : ProfileRepository {
@@ -35,9 +31,9 @@ class FakeProfileRepository(
         inspirationRepository.observeFeed().map { all -> all.filter { it.isDraft } }
 
     private fun seedProfile(): UserProfile = UserProfile(
-        id = "current_user",
-        displayName = "You",
-        username = "you.travels",
+        id = CurrentUser.ID,
+        displayName = CurrentUser.DISPLAY_NAME,
+        username = CurrentUser.USERNAME,
         bio = "Collecting sunsets and stamps, one trip at a time.",
         avatarUrl = null,
         coverImageUrl = "https://images.unsplash.com/photo-1502920917128-1aa500764cbd",
