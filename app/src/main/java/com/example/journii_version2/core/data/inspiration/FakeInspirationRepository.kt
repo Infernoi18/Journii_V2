@@ -57,6 +57,10 @@ class FakeInspirationRepository : InspirationRepository {
         }
     }
 
+    override suspend fun updateInspiration(inspiration: Inspiration) {
+        _feed.value = _feed.value.map { if (it.id == inspiration.id) inspiration else it }
+    }
+
     override suspend fun copyInspiration(sourceId: String, mode: CopyMode): String? {
         val source = _feed.value.firstOrNull { it.id == sourceId } ?: return null
         val newId = "insp_copy_${UUID.randomUUID()}"
