@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.journii_version2.core.data.inspiration.InspirationRepository
 import com.example.journii_version2.core.data.wishlist.WishlistRepository
+import com.example.journii_version2.core.data.profile.ProfileRepository
 import com.example.journii_version2.core.model.Inspiration
 import com.example.journii_version2.core.model.Wishlist
 import kotlinx.coroutines.flow.*
@@ -12,22 +13,26 @@ import kotlinx.coroutines.launch
 data class InspirationDetailUiState(
     val inspiration: Inspiration? = null,
     val isLoading: Boolean = true,
+    val isOwner: Boolean = false,
     val wishlists: List<Wishlist> = emptyList()
 )
 
 class InspirationDetailViewModel(
     private val repository: InspirationRepository,
     private val wishlistRepository: WishlistRepository,
-    inspirationId: String
+    private val profileRepository: ProfileRepository,
+    private val inspirationId: String
 ) : ViewModel() {
 
     val uiState: StateFlow<InspirationDetailUiState> = combine(
         repository.observeInspiration(inspirationId),
-        wishlistRepository.getWishlists()
-    ) { found, wishlists ->
+        wishlistRepository.getWishlists(),
+        profileRepository.observeCurrentUserProfile()
+    ) { found, wishlists, profile ->
         InspirationDetailUiState(
             inspiration = found,
             isLoading = false,
+            isOwner = found?.creator?.id == profile.id,
             wishlists = wishlists
         )
     }.stateIn(
@@ -58,6 +63,14 @@ class InspirationDetailViewModel(
         viewModelScope.launch {
             val wishlistId = wishlistRepository.createWishlist(name, null, false)
             wishlistRepository.addToWishlist(wishlistId, id)
+        }
+    }
+
+    fun deleteInspiration(onDeleted: () -> Unit) {
+        val id = uiState.value.inspiration?.id ?: return
+        viewModelScope.launch {
+            repository.deleteInspiration(id)
+            onDeleted()
         }
     }
 }

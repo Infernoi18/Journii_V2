@@ -49,6 +49,7 @@ import com.example.journii_version2.ui.theme.JourniiSpacing
 @Composable
 fun InspirationDetailScreen(
     repository: InspirationRepository,
+    profileRepository: com.example.journii_version2.core.data.profile.ProfileRepository,
     inspirationId: String,
     onBackClick: () -> Unit,
     onCopyCompleted: (String) -> Unit
@@ -58,7 +59,7 @@ fun InspirationDetailScreen(
     val wishlistRepository = (androidx.compose.ui.platform.LocalContext.current.applicationContext as com.example.journii_version2.JourniiApplication).appContainer.wishlistRepository
 
     val viewModel: InspirationDetailViewModel = viewModel(
-        factory = InspirationDetailViewModelFactory(repository, wishlistRepository, inspirationId)
+        factory = InspirationDetailViewModelFactory(repository, wishlistRepository, profileRepository, inspirationId)
     )
     val uiState by viewModel.uiState.collectAsState()
     val inspiration = uiState.inspiration
@@ -94,9 +95,13 @@ fun InspirationDetailScreen(
             else -> {
                 InspirationDetailContent(
                     inspiration = inspiration,
+                    isOwner = uiState.isOwner,
                     onBackClick = onBackClick,
                     onLikeClick = viewModel::toggleLike,
                     onSaveClick = { showWishlistSheet = true },
+                    onDeleteClick = {
+                        viewModel.deleteInspiration(onDeleted = onBackClick)
+                    },
                     modifier = Modifier.padding(innerPadding)
                 )
             }
@@ -144,9 +149,11 @@ fun InspirationDetailScreen(
 @Composable
 private fun InspirationDetailContent(
     inspiration: Inspiration,
+    isOwner: Boolean,
     onBackClick: () -> Unit,
     onLikeClick: () -> Unit,
     onSaveClick: () -> Unit,
+    onDeleteClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var selectedDayIndex by remember { mutableIntStateOf(0) }
@@ -181,6 +188,14 @@ private fun InspirationDetailContent(
                     ) { Text("← Back") }
 
                     Row {
+                        if (isOwner) {
+                            TextButton(
+                                onClick = onDeleteClick,
+                                colors = ButtonDefaults.textButtonColors(contentColor = Color.White)
+                            ) {
+                                Text("Delete")
+                            }
+                        }
                         TextButton(
                             onClick = onLikeClick,
                             colors = ButtonDefaults.textButtonColors(contentColor = Color.White)

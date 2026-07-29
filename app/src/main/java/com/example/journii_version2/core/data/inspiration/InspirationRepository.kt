@@ -23,4 +23,6 @@ interface InspirationRepository {
         coverImageUrl: String,
         shortDescription: String?
     ): String
+
+    suspend fun deleteInspiration(inspirationId: String)
 }

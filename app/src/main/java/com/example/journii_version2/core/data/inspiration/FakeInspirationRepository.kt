@@ -120,6 +120,10 @@ class FakeInspirationRepository : InspirationRepository {
         return newId
     }
 
+    override suspend fun deleteInspiration(inspirationId: String) {
+        _feed.value = _feed.value.filterNot { it.id == inspirationId }
+    }
+
     // Fake-data stand-in for "the signed-in user" — replace with real
     // profile/session data once auth is backed by a real API.
     private fun currentUserAsCreator() = Creator(

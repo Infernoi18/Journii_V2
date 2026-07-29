@@ -123,6 +123,7 @@ fun JourniiNavGraph(
                 ?: return@composable
             InspirationDetailScreen(
                 repository = inspirationRepository,
+                profileRepository = profileRepository,
                 inspirationId = inspirationId,
                 onBackClick = { navController.popBackStack() },
                 onCopyCompleted = { newId ->
