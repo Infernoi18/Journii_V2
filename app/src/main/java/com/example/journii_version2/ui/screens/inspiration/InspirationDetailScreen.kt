@@ -39,9 +39,11 @@ import com.example.journii_version2.core.model.Inspiration
 import com.example.journii_version2.core.model.ItineraryDay
 import com.example.journii_version2.feature.inspiration.InspirationDetailViewModel
 import com.example.journii_version2.feature.inspiration.InspirationDetailViewModelFactory
+import com.example.journii_version2.ui.components.AddToWishlistSheet
 import com.example.journii_version2.ui.components.ItineraryBlockRow
 import com.example.journii_version2.ui.components.TagChip
 import com.example.journii_version2.ui.components.TransportConnectorRow
+import com.example.journii_version2.ui.screens.wishlist.CreateWishlistDialog
 import com.example.journii_version2.ui.theme.JourniiSpacing
 
 @Composable
@@ -51,12 +53,18 @@ fun InspirationDetailScreen(
     onBackClick: () -> Unit,
     onCopyCompleted: (String) -> Unit
 ) {
+    // In a real app, this would be injected via Hilt or provided by a higher-level container
+    // For now, we manually access it (though we should ideally pass it in like the repository)
+    val wishlistRepository = (androidx.compose.ui.platform.LocalContext.current.applicationContext as com.example.journii_version2.JourniiApplication).appContainer.wishlistRepository
+
     val viewModel: InspirationDetailViewModel = viewModel(
-        factory = InspirationDetailViewModelFactory(repository, inspirationId)
+        factory = InspirationDetailViewModelFactory(repository, wishlistRepository, inspirationId)
     )
     val uiState by viewModel.uiState.collectAsState()
     val inspiration = uiState.inspiration
     var showCopySheet by remember { mutableStateOf(false) }
+    var showWishlistSheet by remember { mutableStateOf(false) }
+    var showCreateWishlistDialog by remember { mutableStateOf(false) }
 
     Scaffold(
         bottomBar = {
@@ -88,11 +96,36 @@ fun InspirationDetailScreen(
                     inspiration = inspiration,
                     onBackClick = onBackClick,
                     onLikeClick = viewModel::toggleLike,
-                    onSaveClick = viewModel::toggleSave,
+                    onSaveClick = { showWishlistSheet = true },
                     modifier = Modifier.padding(innerPadding)
                 )
             }
         }
+    }
+
+    if (showWishlistSheet) {
+        AddToWishlistSheet(
+            wishlists = uiState.wishlists,
+            onWishlistSelected = { id ->
+                viewModel.addToWishlist(id)
+                showWishlistSheet = false
+            },
+            onCreateNewWishlist = {
+                showCreateWishlistDialog = true
+            },
+            onDismiss = { showWishlistSheet = false }
+        )
+    }
+
+    if (showCreateWishlistDialog) {
+        CreateWishlistDialog(
+            onDismiss = { showCreateWishlistDialog = false },
+            onCreate = { name, _, _ ->
+                viewModel.createAndAddToWishlist(name)
+                showCreateWishlistDialog = false
+                showWishlistSheet = false
+            }
+        )
     }
 
     if (showCopySheet && inspiration != null) {
