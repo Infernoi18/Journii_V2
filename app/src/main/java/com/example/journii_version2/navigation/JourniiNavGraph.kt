@@ -23,6 +23,7 @@ import com.example.journii_version2.ui.screens.auth.OtpVerificationScreen
 import com.example.journii_version2.ui.screens.inspiration.InspirationDetailScreen
 import com.example.journii_version2.ui.screens.main.MainScreen
 import com.example.journii_version2.ui.screens.splash.SplashScreen
+import com.example.journii_version2.ui.screens.wishlist.WishlistDetailScreen
 
 private const val AUTH_GRAPH_ROUTE = "auth_graph"
 
@@ -96,7 +97,8 @@ fun JourniiNavGraph(
             MainScreen(
                 inspirationRepository = inspirationRepository,
                 profileRepository = profileRepository,
-                onInspirationClick = { id -> navController.navigate(Screen.InspirationDetail.createRoute(id)) }
+                onInspirationClick = { id -> navController.navigate(Screen.InspirationDetail.createRoute(id)) },
+                onNavigateToWishlistDetail = { id -> navController.navigate(Screen.WishlistDetail.createRoute(id)) }
             )
         }
 
@@ -118,6 +120,18 @@ fun JourniiNavGraph(
                         popUpTo(Screen.InspirationDetail.route) { inclusive = true }
                     }
                 }
+            )
+        }
+
+        composable(
+            route = Screen.WishlistDetail.route,
+            arguments = listOf(
+                navArgument(Screen.WishlistDetail.ARG_WISHLIST_ID) { type = NavType.StringType }
+            )
+        ) {
+            WishlistDetailScreen(
+                onBackClick = { navController.popBackStack() },
+                onInspirationClick = { id -> navController.navigate(Screen.InspirationDetail.createRoute(id)) }
             )
         }
     }
