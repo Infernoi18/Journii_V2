@@ -63,7 +63,8 @@ fun JourniiNavGraph(
             route = AUTH_GRAPH_ROUTE
         ) {
             composable(Screen.AuthLanding.route) { backStackEntry ->
-                val authViewModel = sharedAuthViewModel(navController, backStackEntry, secureTokenStore)
+                val authViewModel =
+                    sharedAuthViewModel(navController, backStackEntry, secureTokenStore)
                 AuthLandingScreen(
                     onSignUpWithEmail = {
                         authViewModel.setSignUpMode(true)
@@ -80,7 +81,8 @@ fun JourniiNavGraph(
             }
 
             composable(Screen.EmailAuth.route) { backStackEntry ->
-                val authViewModel = sharedAuthViewModel(navController, backStackEntry, secureTokenStore)
+                val authViewModel =
+                    sharedAuthViewModel(navController, backStackEntry, secureTokenStore)
                 EmailAuthScreen(
                     viewModel = authViewModel,
                     onAuthenticated = { navigateToMain(navController) }
@@ -88,7 +90,8 @@ fun JourniiNavGraph(
             }
 
             composable(Screen.MobileNumber.route) { backStackEntry ->
-                val authViewModel = sharedAuthViewModel(navController, backStackEntry, secureTokenStore)
+                val authViewModel =
+                    sharedAuthViewModel(navController, backStackEntry, secureTokenStore)
                 MobileNumberScreen(
                     viewModel = authViewModel,
                     onOtpSent = { navController.navigate(Screen.OtpVerification.route) }
@@ -96,14 +99,14 @@ fun JourniiNavGraph(
             }
 
             composable(Screen.OtpVerification.route) { backStackEntry ->
-                val authViewModel = sharedAuthViewModel(navController, backStackEntry, secureTokenStore)
+                val authViewModel =
+                    sharedAuthViewModel(navController, backStackEntry, secureTokenStore)
                 OtpVerificationScreen(
                     viewModel = authViewModel,
                     onAuthenticated = { navigateToMain(navController) }
                 )
             }
         }
-
         composable(Screen.Main.route) {
             MainScreen(
                 inspirationRepository = inspirationRepository,
