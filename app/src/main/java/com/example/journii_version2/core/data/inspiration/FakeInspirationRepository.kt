@@ -127,6 +127,23 @@ class FakeInspirationRepository : InspirationRepository {
         }
     }
 
+    override suspend fun updateOptionalSections(
+        inspirationId: String,
+        notes: String?,
+        checklist: List<com.example.journii_version2.core.model.ChecklistItem>,
+        tags: List<String>
+    ) {
+        _feed.value = _feed.value.map { inspiration ->
+            if (inspiration.id == inspirationId) {
+                inspiration.copy(notes = notes, checklist = checklist, tags = tags)
+            } else inspiration
+        }
+    }
+
+    override suspend fun updateInspiration(inspiration: Inspiration) {
+        _feed.value = _feed.value.map { if (it.id == inspiration.id) inspiration else it }
+    }
+
     override suspend fun publishInspiration(inspirationId: String) {
         _feed.value = _feed.value.map { inspiration ->
             if (inspiration.id == inspirationId) inspiration.copy(isDraft = false) else inspiration
@@ -147,7 +164,8 @@ class FakeInspirationRepository : InspirationRepository {
         val list = current[inspirationId]?.toMutableList() ?: mutableListOf()
         list.add(
             com.example.journii_version2.core.model.Comment(
-                id = UUID.randomUUID().toString(),
+                id = java.util.UUID.randomUUID().toString(),
+                inspirationId = inspirationId,
                 creator = currentUserAsCreator(),
                 text = text,
                 createdAt = java.time.Instant.now()

@@ -22,6 +22,13 @@ interface InspirationRepository {
         privacy: Privacy = Privacy.PUBLIC
     ): String
     suspend fun updateItinerary(inspirationId: String, itinerary: List<ItineraryDay>)
+    suspend fun updateOptionalSections(
+        inspirationId: String,
+        notes: String?,
+        checklist: List<com.example.journii_version2.core.model.ChecklistItem>,
+        tags: List<String>
+    )
+    suspend fun updateInspiration(inspiration: Inspiration)
     suspend fun publishInspiration(inspirationId: String)
     suspend fun deleteInspiration(inspirationId: String)
     fun observeComments(inspirationId: String): Flow<List<com.example.journii_version2.core.model.Comment>>

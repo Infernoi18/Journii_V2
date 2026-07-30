@@ -20,8 +20,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
 import androidx.compose.material.icons.filled.Edit
-import androidx.compose.material.icons.filled.ExitToApp
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -101,27 +99,28 @@ fun ProfileScreen(
                 ProfileHeader(profile = profile)
             }
 
-        item(span = StaggeredGridItemSpan.FullLine) {
-            ProfileTabRow(selectedTab = uiState.selectedTab, onTabSelected = viewModel::selectTab)
-        }
-
-        if (uiState.visibleInspirations.isEmpty()) {
             item(span = StaggeredGridItemSpan.FullLine) {
-                Text(
-                    text = emptyStateMessage(uiState.selectedTab),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(JourniiSpacing.md)
-                )
+                ProfileTabRow(selectedTab = uiState.selectedTab, onTabSelected = viewModel::selectTab)
             }
-        } else {
-            items(uiState.visibleInspirations, key = { it.id }) { inspiration ->
-                InspirationCard(
-                    inspiration = inspiration,
-                    onClick = { onInspirationClick(inspiration.id) },
-                    onLikeClick = {},
-                    onSaveClick = {}
-                )
+
+            if (uiState.visibleInspirations.isEmpty()) {
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    Text(
+                        text = emptyStateMessage(uiState.selectedTab),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.padding(JourniiSpacing.md)
+                    )
+                }
+            } else {
+                items(uiState.visibleInspirations, key = { it.id }) { inspiration ->
+                    InspirationCard(
+                        inspiration = inspiration,
+                        onClick = { onInspirationClick(inspiration.id) },
+                        onLikeClick = {},
+                        onSaveClick = {}
+                    )
+                }
             }
         }
     }
