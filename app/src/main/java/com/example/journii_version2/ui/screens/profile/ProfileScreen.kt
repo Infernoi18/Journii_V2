@@ -17,11 +17,20 @@ import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
 import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
 import androidx.compose.foundation.lazy.staggeredgrid.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.ExitToApp
+import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
+import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
@@ -41,10 +50,13 @@ import com.example.journii_version2.feature.profile.ProfileViewModelFactory
 import com.example.journii_version2.ui.components.InspirationCard
 import com.example.journii_version2.ui.theme.JourniiSpacing
 
+@OptIn(androidx.compose.material3.ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileScreen(
     profileRepository: ProfileRepository,
-    onInspirationClick: (String) -> Unit
+    onInspirationClick: (String) -> Unit,
+    onEditProfileClick: () -> Unit,
+    onSignOutClick: () -> Unit
 ) {
     val viewModel: ProfileViewModel = viewModel(factory = ProfileViewModelFactory(profileRepository))
     val uiState by viewModel.uiState.collectAsState()
@@ -57,20 +69,37 @@ fun ProfileScreen(
         return
     }
 
-    LazyVerticalStaggeredGrid(
-        columns = StaggeredGridCells.Fixed(2),
-        contentPadding = PaddingValues(
-            start = JourniiSpacing.sm,
-            end = JourniiSpacing.sm,
-            bottom = JourniiSpacing.lg
-        ),
-        horizontalArrangement = Arrangement.spacedBy(JourniiSpacing.sm),
-        verticalItemSpacing = JourniiSpacing.sm,
-        modifier = Modifier.fillMaxSize()
-    ) {
-        item(span = StaggeredGridItemSpan.FullLine) {
-            ProfileHeader(profile = profile)
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Profile") },
+                actions = {
+                    IconButton(onClick = onEditProfileClick) {
+                        Icon(Icons.Default.Edit, contentDescription = "Edit Profile")
+                    }
+                    IconButton(onClick = onSignOutClick) {
+                        Icon(Icons.AutoMirrored.Filled.ExitToApp, contentDescription = "Sign Out")
+                    }
+                }
+            )
         }
+    ) { padding ->
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(2),
+            contentPadding = PaddingValues(
+                start = JourniiSpacing.sm,
+                end = JourniiSpacing.sm,
+                bottom = JourniiSpacing.lg
+            ),
+            horizontalArrangement = Arrangement.spacedBy(JourniiSpacing.sm),
+            verticalItemSpacing = JourniiSpacing.sm,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+        ) {
+            item(span = StaggeredGridItemSpan.FullLine) {
+                ProfileHeader(profile = profile)
+            }
 
         item(span = StaggeredGridItemSpan.FullLine) {
             ProfileTabRow(selectedTab = uiState.selectedTab, onTabSelected = viewModel::selectTab)
@@ -99,7 +128,7 @@ fun ProfileScreen(
 }
 
 @Composable
-private fun ProfileHeader(profile: UserProfile) {
+fun ProfileHeader(profile: UserProfile) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Box(
             modifier = Modifier
@@ -168,7 +197,7 @@ private fun ProfileHeader(profile: UserProfile) {
 }
 
 @Composable
-private fun ProfileStat(label: String, value: Int) {
+fun ProfileStat(label: String, value: Int) {
     Column(horizontalAlignment = Alignment.CenterHorizontally) {
         Text(text = value.toString(), style = MaterialTheme.typography.titleMedium)
         Text(
@@ -180,7 +209,7 @@ private fun ProfileStat(label: String, value: Int) {
 }
 
 @Composable
-private fun ProfileTabRow(
+fun ProfileTabRow(
     selectedTab: ProfileTab,
     onTabSelected: (ProfileTab) -> Unit
 ) {
@@ -196,19 +225,19 @@ private fun ProfileTabRow(
     }
 }
 
-private fun ProfileTab.displayName(): String = when (this) {
+fun ProfileTab.displayName(): String = when (this) {
     ProfileTab.PINNED -> "Pinned"
     ProfileTab.COPIED -> "Copied"
     ProfileTab.DRAFTS -> "Drafts"
 }
 
-private fun Privacy.displayName(): String = when (this) {
+fun Privacy.displayName(): String = when (this) {
     Privacy.PUBLIC -> "Public"
     Privacy.FOLLOWERS_ONLY -> "Followers Only"
     Privacy.PRIVATE -> "Private"
 }
 
-private fun emptyStateMessage(tab: ProfileTab): String = when (tab) {
+fun emptyStateMessage(tab: ProfileTab): String = when (tab) {
     ProfileTab.PINNED -> "Nothing pinned yet. Pin inspirations you love from the feed."
     ProfileTab.COPIED -> "You haven't copied any inspirations yet."
     ProfileTab.DRAFTS -> "No drafts in progress."

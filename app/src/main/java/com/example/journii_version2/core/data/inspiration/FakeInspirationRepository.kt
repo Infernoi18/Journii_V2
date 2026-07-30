@@ -2,13 +2,13 @@ package com.example.journii_version2.core.data.inspiration
 
 import com.example.journii_version2.core.model.BlockCategory
 import com.example.journii_version2.core.model.ChecklistItem
-import com.example.journii_version2.core.model.Comment
 import com.example.journii_version2.core.model.CopyMode
 import com.example.journii_version2.core.model.CopySection
 import com.example.journii_version2.core.model.Creator
 import com.example.journii_version2.core.model.Inspiration
 import com.example.journii_version2.core.model.ItineraryBlock
 import com.example.journii_version2.core.model.ItineraryDay
+import com.example.journii_version2.core.model.Privacy
 import com.example.journii_version2.core.model.TransportMode
 import com.example.journii_version2.core.session.CurrentUser
 import kotlinx.coroutines.delay
@@ -20,7 +20,6 @@ import java.util.UUID
 class FakeInspirationRepository : InspirationRepository {
 
     private val _feed = MutableStateFlow(seedInspirations())
-    private val _comments = MutableStateFlow<Map<String, List<Comment>>>(seedComments())
 
     override fun observeFeed() = _feed.asStateFlow()
 
@@ -58,10 +57,6 @@ class FakeInspirationRepository : InspirationRepository {
                 inspiration
             }
         }
-    }
-
-    override suspend fun updateInspiration(inspiration: Inspiration) {
-        _feed.value = _feed.value.map { if (it.id == inspiration.id) inspiration else it }
     }
 
     override suspend fun copyInspiration(sourceId: String, mode: CopyMode): String? {
@@ -106,7 +101,8 @@ class FakeInspirationRepository : InspirationRepository {
         country: String,
         days: Int,
         coverImageUrl: String,
-        shortDescription: String?
+        shortDescription: String?,
+        privacy: Privacy
     ): String {
         val newId = "insp_draft_${UUID.randomUUID()}"
         val draft = Inspiration(
@@ -118,14 +114,11 @@ class FakeInspirationRepository : InspirationRepository {
             days = days,
             shortDescription = shortDescription,
             isDraft = true,
+            privacy = privacy,
             itinerary = List(days) { ItineraryDay(dayNumber = it + 1) }
         )
         _feed.value = _feed.value + draft
         return newId
-    }
-
-    override suspend fun deleteInspiration(inspirationId: String) {
-        _feed.value = _feed.value.filterNot { it.id == inspirationId }
     }
 
     override suspend fun updateItinerary(inspirationId: String, itinerary: List<ItineraryDay>) {
@@ -134,45 +127,35 @@ class FakeInspirationRepository : InspirationRepository {
         }
     }
 
-    override suspend fun updateOptionalSections(
-        inspirationId: String,
-        notes: String?,
-        checklist: List<ChecklistItem>,
-        tags: List<String>
-    ) {
-        _feed.value = _feed.value.map { inspiration ->
-            if (inspiration.id == inspirationId) {
-                inspiration.copy(notes = notes, checklist = checklist, tags = tags)
-            } else {
-                inspiration
-            }
-        }
-    }
-
     override suspend fun publishInspiration(inspirationId: String) {
         _feed.value = _feed.value.map { inspiration ->
-            if (inspiration.id == inspirationId) {
-                inspiration.copy(isDraft = false)
-            } else {
-                inspiration
-            }
+            if (inspiration.id == inspirationId) inspiration.copy(isDraft = false) else inspiration
         }
     }
 
-    override fun observeComments(inspirationId: String): kotlinx.coroutines.flow.Flow<List<Comment>> =
-        _comments.map { it[inspirationId] ?: emptyList() }
+    override suspend fun deleteInspiration(inspirationId: String) {
+        _feed.value = _feed.value.filterNot { it.id == inspirationId }
+    }
+
+    override fun observeComments(inspirationId: String) =
+        _comments.map { all -> all[inspirationId] ?: emptyList() }
+
+    private val _comments = MutableStateFlow<Map<String, List<com.example.journii_version2.core.model.Comment>>>(emptyMap())
 
     override suspend fun addComment(inspirationId: String, text: String) {
-        val newComment = Comment(
-            id = "comment_${UUID.randomUUID()}",
-            inspirationId = inspirationId,
-            creator = currentUserAsCreator(),
-            text = text
+        val current = _comments.value.toMutableMap()
+        val list = current[inspirationId]?.toMutableList() ?: mutableListOf()
+        list.add(
+            com.example.journii_version2.core.model.Comment(
+                id = UUID.randomUUID().toString(),
+                creator = currentUserAsCreator(),
+                text = text,
+                createdAt = java.time.Instant.now()
+            )
         )
-        val currentComments = _comments.value[inspirationId] ?: emptyList()
-        _comments.value = _comments.value + (inspirationId to (currentComments + newComment))
+        current[inspirationId] = list
+        _comments.value = current
 
-        // Update comment count
         _feed.value = _feed.value.map {
             if (it.id == inspirationId) it.copy(commentCount = it.commentCount + 1) else it
         }
@@ -322,29 +305,4 @@ class FakeInspirationRepository : InspirationRepository {
         )
         return listOf(day1, day2) + List(5) { ItineraryDay(dayNumber = it + 3) }
     }
-
-    private fun seedComments(): Map<String, List<Comment>> = mapOf(
-        "insp_1" to listOf(
-            Comment(
-                id = "c1",
-                inspirationId = "insp_1",
-                creator = Creator("u4", "Diego Ramirez", "diegoexplores", null),
-                text = "Kyoto is magical! Don't miss the Fushimi Inari at sunrise."
-            ),
-            Comment(
-                id = "c2",
-                inspirationId = "insp_1",
-                creator = Creator("u5", "Sara Kim", "sararoams", null),
-                text = "The matcha there is on another level. Great itinerary!"
-            )
-        ),
-        "insp_2" to listOf(
-            Comment(
-                id = "c3",
-                inspirationId = "insp_2",
-                creator = Creator("u1", "Maya Chen", "mayawanders", null),
-                text = "Did you see the Northern Lights? It's been on my bucket list forever."
-            )
-        )
-    )
 }

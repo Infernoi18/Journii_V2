@@ -1,7 +1,6 @@
 package com.example.journii_version2.navigation
 
 sealed class Screen(val route: String) {
-    data object Splash : Screen("splash")
     data object AuthLanding : Screen("auth_landing")
     data object EmailAuth : Screen("email_auth")
     data object MobileNumber : Screen("mobile_number")
@@ -23,6 +22,7 @@ sealed class Screen(val route: String) {
         const val ARG_WISHLIST_ID = "wishlistId"
         fun createRoute(wishlistId: String) = "wishlist_detail/$wishlistId"
     }
+    data object EditProfile : Screen("edit_profile")
 }
 
 /**

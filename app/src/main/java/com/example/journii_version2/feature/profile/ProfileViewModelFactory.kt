@@ -10,6 +10,10 @@ class ProfileViewModelFactory(
 ) : ViewModelProvider.Factory {
     @Suppress("UNCHECKED_CAST")
     override fun <T : ViewModel> create(modelClass: Class<T>, extras: CreationExtras): T {
-        return ProfileViewModel(profileRepository) as T
+        return when {
+            modelClass.isAssignableFrom(ProfileViewModel::class.java) -> ProfileViewModel(profileRepository) as T
+            modelClass.isAssignableFrom(EditProfileViewModel::class.java) -> EditProfileViewModel(profileRepository) as T
+            else -> throw IllegalArgumentException("Unknown ViewModel class: ${modelClass.name}")
+        }
     }
 }

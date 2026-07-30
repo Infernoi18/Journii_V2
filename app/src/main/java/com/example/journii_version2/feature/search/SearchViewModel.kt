@@ -5,6 +5,8 @@ import androidx.lifecycle.viewModelScope
 import com.example.journii_version2.core.data.inspiration.InspirationRepository
 import com.example.journii_version2.core.model.Inspiration
 import com.example.journii_version2.core.model.SearchFilters
+import com.example.journii_version2.core.model.isVisibleInDiscovery
+import com.example.journii_version2.core.session.CurrentUser
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
@@ -33,10 +35,11 @@ class SearchViewModel(
         repository.observeFeed(),
         filters
     ) { all, currentFilters ->
+        val discoveryList = all.filter { it.isVisibleInDiscovery(CurrentUser.ID) }
         SearchUiState(
             filters = currentFilters,
             // Empty filters -> empty results (a search screen, not a mirrored feed)
-            results = if (currentFilters.isEmpty) emptyList() else all.filter { it.matches(currentFilters) },
+            results = if (currentFilters.isEmpty) emptyList() else discoveryList.filter { it.matches(currentFilters) },
             isLoading = false
         )
     }.stateIn(

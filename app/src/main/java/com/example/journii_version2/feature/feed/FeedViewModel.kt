@@ -4,6 +4,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.journii_version2.core.data.inspiration.InspirationRepository
 import com.example.journii_version2.core.model.Inspiration
+import com.example.journii_version2.core.model.isVisibleInDiscovery
+import com.example.journii_version2.core.session.CurrentUser
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -34,10 +36,11 @@ class FeedViewModel(
         errorMessage,
         selectedTag
     ) { inspirations, refreshing, error, tag ->
+        val discoveryList = inspirations.filter { it.isVisibleInDiscovery(CurrentUser.ID) }
         val filtered = if (tag == null) {
-            inspirations.filter { !it.isDraft }
+            discoveryList
         } else {
-            inspirations.filter { !it.isDraft && tag in it.tags }
+            discoveryList.filter { tag in it.tags }
         }
         FeedUiState(
             inspirations = filtered,

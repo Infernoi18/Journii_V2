@@ -2,6 +2,7 @@ package com.example.journii_version2.navigation
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavBackStackEntry
 import androidx.navigation.NavHostController
@@ -17,6 +18,8 @@ import com.example.journii_version2.core.data.wishlist.WishlistRepository
 import com.example.journii_version2.core.security.session.SecureTokenStore
 import com.example.journii_version2.feature.auth.AuthViewModel
 import com.example.journii_version2.feature.auth.AuthViewModelFactory
+import com.example.journii_version2.feature.profile.EditProfileViewModel
+import com.example.journii_version2.feature.profile.ProfileViewModelFactory
 import com.example.journii_version2.ui.screens.auth.AuthLandingScreen
 import com.example.journii_version2.ui.screens.auth.EmailAuthScreen
 import com.example.journii_version2.ui.screens.auth.MobileNumberScreen
@@ -25,38 +28,28 @@ import com.example.journii_version2.ui.screens.create.ItineraryBuilderScreen
 import com.example.journii_version2.ui.screens.create.OptionalSectionsScreen
 import com.example.journii_version2.ui.screens.inspiration.InspirationDetailScreen
 import com.example.journii_version2.ui.screens.main.MainScreen
-import com.example.journii_version2.ui.screens.splash.SplashScreen
+import com.example.journii_version2.ui.screens.profile.EditProfileScreen
 import com.example.journii_version2.ui.screens.wishlist.WishlistDetailScreen
+
+import kotlinx.coroutines.launch
 
 private const val AUTH_GRAPH_ROUTE = "auth_graph"
 
 @Composable
 fun JourniiNavGraph(
+    startDestination: String,
     secureTokenStore: SecureTokenStore,
     inspirationRepository: InspirationRepository,
     profileRepository: ProfileRepository,
     wishlistRepository: WishlistRepository,
     navController: NavHostController = rememberNavController()
 ) {
+    val coroutineScope = rememberCoroutineScope()
     NavHost(
         navController = navController,
-        startDestination = Screen.Splash.route
+        startDestination = startDestination
     ) {
-        composable(Screen.Splash.route) {
-            SplashScreen(
-                secureTokenStore = secureTokenStore,
-                onNavigateToAuth = {
-                    navController.navigate(AUTH_GRAPH_ROUTE) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
-                    }
-                },
-                onNavigateToHome = {
-                    navController.navigate(Screen.Main.route) {
-                        popUpTo(Screen.Splash.route) { inclusive = true }
-                    }
-                }
-            )
-        }
+        // No longer need Screen.Splash.route in the graph
 
         navigation(
             startDestination = Screen.AuthLanding.route,
@@ -113,7 +106,27 @@ fun JourniiNavGraph(
                 profileRepository = profileRepository,
                 wishlistRepository = wishlistRepository,
                 onInspirationClick = { id -> navController.navigate(Screen.InspirationDetail.createRoute(id)) },
-                onWishlistClick = { id -> navController.navigate(Screen.WishlistDetail.createRoute(id)) }
+                onWishlistClick = { id -> navController.navigate(Screen.WishlistDetail.createRoute(id)) },
+                onEditProfileClick = { navController.navigate(Screen.EditProfile.route) },
+                onSignOutClick = {
+                    coroutineScope.launch {
+                        secureTokenStore.clearSession()
+                        navController.navigate(AUTH_GRAPH_ROUTE) {
+                            popUpTo(Screen.Main.route) { inclusive = true }
+                        }
+                    }
+                }
+            )
+        }
+
+        composable(Screen.EditProfile.route) {
+            val editViewModel: EditProfileViewModel = viewModel(
+                factory = ProfileViewModelFactory(profileRepository)
+            )
+            EditProfileScreen(
+                viewModel = editViewModel,
+                onBack = { navController.popBackStack() },
+                onNavigateBackAfterSave = { navController.popBackStack() }
             )
         }
 

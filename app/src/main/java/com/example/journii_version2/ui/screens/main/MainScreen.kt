@@ -31,7 +31,9 @@ fun MainScreen(
     profileRepository: ProfileRepository,
     wishlistRepository: WishlistRepository,
     onInspirationClick: (String) -> Unit,
-    onWishlistClick: (String) -> Unit
+    onWishlistClick: (String) -> Unit,
+    onEditProfileClick: () -> Unit,
+    onSignOutClick: () -> Unit
 ) {
     val tabNavController = rememberNavController()
 
@@ -74,7 +76,9 @@ fun MainScreen(
             composable(MainTab.Profile.route) {
                 ProfileScreen(
                     profileRepository = profileRepository,
-                    onInspirationClick = onInspirationClick
+                    onInspirationClick = onInspirationClick,
+                    onEditProfileClick = onEditProfileClick,
+                    onSignOutClick = onSignOutClick
                 )
             }
         }

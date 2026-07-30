@@ -30,6 +30,14 @@ class FakeProfileRepository(
     override fun observeDraftInspirations(): Flow<List<Inspiration>> =
         inspirationRepository.observeFeed().map { all -> all.filter { it.isDraft } }
 
+    override suspend fun updateProfile(displayName: String, bio: String, privacy: Privacy) {
+        _profile.value = _profile.value.copy(
+            displayName = displayName,
+            bio = bio,
+            privacy = privacy
+        )
+    }
+
     private fun seedProfile(): UserProfile = UserProfile(
         id = CurrentUser.ID,
         displayName = CurrentUser.DISPLAY_NAME,

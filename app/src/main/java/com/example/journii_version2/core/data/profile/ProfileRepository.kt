@@ -9,4 +9,9 @@ interface ProfileRepository {
     fun observePinnedInspirations(): Flow<List<Inspiration>>
     fun observeCopiedInspirations(): Flow<List<Inspiration>>
     fun observeDraftInspirations(): Flow<List<Inspiration>>
+    suspend fun updateProfile(
+        displayName: String,
+        bio: String,
+        privacy: com.example.journii_version2.core.model.Privacy
+    )
 }
